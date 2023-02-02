@@ -1,0 +1,36 @@
+[
+    {
+        "type": "PolicyAssignment",
+        "policy": {
+            "type": "AccessPolicy",
+            "name": "CloudAccessPolicy",
+            "id": "06ECC672-2FAC-0ed3-0000-004294969495"
+        },
+        "targets": [
+            {
+                "type": "Device",
+                "name": "awsftdv01",
+                "id": "a77526f6-a2fc-11ed-830e-92ec6a922833"
+            }
+        ],
+        "name": "CloudAccessPolicy",
+        "id": "06ECC672-2FAC-0ed3-0000-004294969495"
+    },
+    {
+        "type": "PolicyAssignment",
+        "policy": {
+            "type": "FTDNatPolicy",
+            "name": "CloudNAT",
+            "id": "06ECC672-2FAC-0ed3-0000-004294970203"
+        },
+        "targets": [
+            {
+                "type": "Device",
+                "name": "awsftdv01",
+                "id": "a77526f6-a2fc-11ed-830e-92ec6a922833"
+            }
+        ],
+        "name": "CloudNAT",
+        "id": "06ECC672-2FAC-0ed3-0000-004294970203"
+    }
+]

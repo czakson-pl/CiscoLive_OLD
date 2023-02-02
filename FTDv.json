@@ -1,0 +1,17 @@
+[
+	{
+		"name": "awsftdv01",
+		"hostName": "10.42.3.10",
+		"natID": "",
+		"regKey": "cisco123",
+		"type": "Device",
+		"license_caps": [
+			"PROTECT",
+			"CONTROL"
+		],
+		"accessPolicy": {
+			"name": "CloudAccessPolicy",
+			"type": "AccessPolicy"
+		}
+	}
+]

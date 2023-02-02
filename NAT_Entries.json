@@ -1,0 +1,49 @@
+[
+	{
+	  "enabled": true,
+	  "translatedDestination": {
+		"type": "Host",
+		"overridable": false,
+		"name": "Serv-a"
+	  },
+	  "unidirectional": false,
+	  "originalDestinationPort": {
+		"type": "ProtocolPortObject",
+		"protocol": "TCP",
+		"overridable": false,
+		"id": "18312adc-38bb-11e2-86aa-62f0c593a59a",
+		"name": "HTTP"
+	  },
+	  "translatedDestinationPort": {
+		"type": "ProtocolPortObject",
+		"protocol": "TCP",
+		"overridable": false,
+		"id": "18312adc-38bb-11e2-86aa-62f0c593a59a",
+		"name": "HTTP"
+	  },
+	  "originalSource": {
+		"type": "NetworkGroup",
+		"overridable": false,
+		"id": "cb7116e8-66a6-480b-8f9b-295191a0940a",
+		"name": "any-ipv4"
+	  },
+	  "interfaceInOriginalDestination": true,
+	  "interfaceInTranslatedSource": true,
+	  "type": "FTDManualNatRule",
+	  "dns": false,
+	  "routeLookup": false,
+	  "noProxyArp": false,
+	  "netToNet": false,
+	  "natType": "STATIC",
+	  "sourceInterface": {
+		"name": "Outside",
+		"type": "SecurityZone"
+	  },
+	  "fallThrough": false,
+	  "interfaceIpv6": false,
+	  "destinationInterface": {
+		"name": "Inside",
+		"type": "SecurityZone"
+	  }
+	}
+]	

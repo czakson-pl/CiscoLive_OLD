@@ -1,0 +1,24 @@
+[
+	{
+		"type": "Host",
+		"value": "10.42.2.100",
+		"overridable": false,
+		"description": " ",
+		"name": "Serv-a"
+	},
+    {
+        "type": "Network",
+        "value": "10.42.2.0/24",
+        "overridable": false,
+		"description": " ",
+        "name": "Local_lan"
+    },
+    {
+        "name": "any-ipv4",
+        "type": "Network",
+        "value": "0.0.0.0/0",
+        "description": " ",
+        "overridable": false,
+        "id": "cb7116e8-66a6-480b-8f9b-295191a0940a"
+    }	
+]

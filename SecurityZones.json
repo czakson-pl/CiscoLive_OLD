@@ -1,0 +1,24 @@
+[
+    {
+        "type": "SecurityZone",
+        "name": "Outside",
+        "interfaceMode": "ROUTED",
+        "interfaces": [
+            {
+                "type": "PhysicalInterface",
+                "name": "TenGigabitEthernet0/0"
+            }
+        ]
+    },
+    {
+        "type": "SecurityZone",
+        "name": "Inside",
+        "interfaceMode": "ROUTED",
+        "interfaces": [
+            {
+                "type": "PhysicalInterface",
+                "name": "TenGigabitEthernet0/1"
+            }
+        ]
+    }
+]

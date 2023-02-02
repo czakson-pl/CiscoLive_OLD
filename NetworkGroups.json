@@ -1,0 +1,14 @@
+[
+    {
+        "type": "NetworkGroup",
+        "objects": [
+            {
+                "type": "Network",
+                "name": "Serv-a"
+            }
+        ],
+        "overridable": false,
+        "description": " ",
+        "name": "Example_group_of_networks"
+    }
+]

@@ -1,0 +1,8 @@
+{
+  "type": "DeploymentRequest",
+  "forceDeploy": false,
+  "ignoreWarning": true,
+  "deviceList": [
+  ],
+  "deploymentNote": "API deployment"
+}

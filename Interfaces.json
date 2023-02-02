@@ -1,0 +1,28 @@
+[
+    {
+        "type": "PhysicalInterface",
+        "name": "TenGigabitEthernet0/0",
+		"ifname": "public",
+		"mode": "NONE",
+        "enabled": true,
+		"ipv4": {
+			"dhcp": {
+				"enableDefaultRouteDHCP": true,
+				"dhcpRouteMetric": 1
+			}
+        }
+    },
+    {
+        "type": "PhysicalInterface",
+        "name": "TenGigabitEthernet0/1",
+		"ifname": "private",
+		"mode": "NONE",
+        "enabled": true,
+		"ipv4": {
+			"dhcp": {
+                "enableDefaultRouteDHCP": false,
+				"dhcpRouteMetric": 1
+			}
+        }
+    }
+]

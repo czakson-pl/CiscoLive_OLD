@@ -1,0 +1,16 @@
+[
+    {
+        "type": "PortObjectGroup",
+        "objects": [
+            {
+                "type": "ProtocolPortObject",
+                "port": "8081",
+                "overridable": false,
+                "name": "API_Service"
+            }
+        ],
+        "overridable": false,
+        "description": " ",
+        "name": "Example_group_of_ports"
+    }
+]

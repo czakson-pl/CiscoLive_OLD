@@ -1,0 +1,7 @@
+{
+    "type": "AccessPolicy",
+    "name": "CloudAccessPolicy",
+    "defaultAction": {
+        "action": "NETWORK_DISCOVERY"
+    }
+}
