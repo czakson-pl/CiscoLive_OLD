@@ -592,11 +592,45 @@ class JSON_2_FMC:
                     return {"response" : False, "text" : "Cannot find FTD on the list newly added devices. Most likely FTD not fully enrolled yet or wrong IP/regKey of FTD used."}      
             else:
                 return {"response" : False, "text" : "Error while polling the list of newly added devices."+str(adding_ftd["text"])}
-            
+
 ########    step 5:
+########    Initial deployment checks?
+    def step_5_J2F(self, no):
+        nooo=1
+        jobH=fmc.devices.jobhistories.get()   
+        if jobH["code"] < 300:
+            repeats=10
+            while repeats != 0:
+                if isinstance(jobH["text"], list):
+                    if "deploymentNote" is in jobH["text"][len(jobH["text"])-1].keys():
+                        if jobH["text"][len(jobH["text"])-1]["deploymentNote"] == "Deployment after registration":
+                            #print_colored('ON HOLD', 'cyan', "Initial deployment completed.", no, 1)
+                            repeats=0
+                            return {"response" : True, "text" : "Initial deployment completed."}
+                        else:
+                            print_colored('ON HOLD', 'cyan', "Initial deployment has not finished yet, waiting for 30 sec, no of retries: "+ str(repeats), no, 1, nooo)
+                            repeats=repeats-1
+                            nooo=nooo+1
+                            time.sleep(30)   
+                    
+                    print_colored('ON HOLD', 'cyan', "FTD not registered yet, waiting for 30 sec, no of retries: "+ str(repeats), no, 6, nooo)
+                else:
+                    if "deploymentNote" is in jobH["text"].keys():
+                        if jobH["text"][len(jobH["text"])-1]["deploymentNote"] == "Deployment after registration":
+                            #print_colored('ON HOLD', 'cyan', "Initial deployment completed.", no, 1)
+                            repeats=0
+                            return {"response" : True, "text" : "Initial deployment completed."}
+                        else:
+                            print_colored('ON HOLD', 'cyan', "Initial deployment has not finished yet, waiting for 30 sec, no of retries: "+ str(repeats), no, 1, nooo)
+                            repeats=repeats-1
+                            nooo=nooo+1
+                            time.sleep(30)                           
+
+        return {"response" : False, "text" : "Error while polling the current deployment."+str(adding_ftd["text"])}
+########    step 6:
 ########    Interfaces checks?
            
-    def step_5_J2F(self, no):
+    def step_6_J2F(self, no):
         global interfaces
         global ftd
         int_id={}
@@ -646,10 +680,10 @@ class JSON_2_FMC:
             #adding_ftd=fmc.devices.devicerecords.post(ftd)    
             
             
-########    step 6:
+########    step 7:
 ########    SecurityZone checks?
            
-    def step_6_J2F(self, no):
+    def step_7_J2F(self, no):
         global SecurityZone
         global interfaces
         global ftd
@@ -702,10 +736,10 @@ class JSON_2_FMC:
         
         
         
-########    step 7:
+########    step 8:
 ########    NetworkObjects checks 
            
-    def step_7_J2F(self, no):
+    def step_8_J2F(self, no):
         global NetHostObj
         NetHostObj_txt=""
 
@@ -728,10 +762,10 @@ class JSON_2_FMC:
         return {"response" : True, "text" : NetHostObj_txt}  
         
         
-########    step 8:
+########    step 9:
 ########    Portprotocols checks 
            
-    def step_8_J2F(self, no):
+    def step_9_J2F(self, no):
 
         global ProtocolPortObject
         ProtocolPortObject_txt=""
@@ -755,10 +789,10 @@ class JSON_2_FMC:
                 
         return {"response" : True, "text" : ProtocolPortObject_txt} 
         
-########    step 9:
+########    step 10:
 ########    Net/Host Groups checks 
            
-    def step_9_J2F(self, no):
+    def step_10_J2F(self, no):
         NetGrps_txt=""
         NetGrps_on_fmc={}
         global NetworkGroups
@@ -775,16 +809,18 @@ class JSON_2_FMC:
 
         obj_in_netGrps=0 
         if CheckNetGrpsID():
+            noo=1
             for each in NetworkGroups:
                 if "id" in each.keys():
                     NetGrps_txt=each["id"]+", "+NetGrps_txt
                 else:
                     add_netgrp=fmc.object.networkgroups.post(each)
                     if add_netgrp["code"] < 300:
-                        print_colored('PASS', 'green', "Successfuly added NetGroupst Object with id: "+add_netgrp["text"][0]["id"], 9)
+                        print_colored('PASS', 'green', "Successfuly added NetGroupst Object with id: "+add_netgrp["text"][0]["id"], no, 1, noo)
                         NetworkGroups[obj_in_netGrps]["id"]=add_netgrp["text"][0]["id"]
                     else:
                         print_colored(add_netgrp["text"])
+                    noo=noo+1
                 obj_in_netGrps=obj_in_netGrps+1
             
                 
@@ -793,10 +829,10 @@ class JSON_2_FMC:
         
         return {"response" : True, "text" : NetGrps_txt} 
 
-########    step 10:
+########    step 11:
 ########    PortProto Groups checks 
            
-    def step_10_J2F(self, no):
+    def step_11_J2F(self, no):
         PortGrps_txt=""
         PortGrps_on_fmc={}
         global PortObjectGroups
@@ -817,16 +853,18 @@ class JSON_2_FMC:
 
         obj_in_portGrps=0 
         if CheckPortProtoGrpID():
+            noo=1
             for each in PortObjectGroups:
                 if "id" in each.keys():
                     PortGrps_txt=each["id"]+", "+PortGrps_txt
                 else:
                     add_portgrp=fmc.object.portobjectgroups.post(each)
                     if add_portgrp["code"] < 300:
-                        print_colored('PASS', 'green', "Successfuly added Port/Proto Group Object with id: "+add_portgrp["text"][0]["id"], 3)
+                        print_colored('PASS', 'green', "Successfuly added Port/Proto Group Object with id: "+add_portgrp["text"][0]["id"], no, 1, noo)
                         PortObjectGroups[obj_in_portGrps]["id"]=add_portgrp["text"][0]["id"]
                     else:
                         print_colored(add_portgrp["text"])
+                noo=noo+1
                 obj_in_portGrps=obj_in_portGrps+1
             
                 
@@ -835,10 +873,10 @@ class JSON_2_FMC:
 
         return {"response" : True, "text" : PortGrps_txt}
 
-########    step 11:
+########    step 12:
 ########    ACE 
            
-    def step_11_J2F(self, no):
+    def step_12_J2F(self, no):
         global NetHostObj        
         global SecurityZone
         global ftd        
@@ -877,10 +915,10 @@ class JSON_2_FMC:
         return {"response" : True, "text" : ACE_txt}  
 
 
-########    step 12:
+########    step 13:
 ########    NAT Policy checks?
            
-    def step_12_J2F(self, no):
+    def step_13_J2F(self, no):
         global nat
         if "id" in nat.keys():
             return {"response" : True, "text" : nat["id"]}              
@@ -901,10 +939,10 @@ class JSON_2_FMC:
         return {"response" : True, "text" : nat["id"]}  
 
 
-########    step 13:
+########    step 14:
 ########    NAT Rule check
            
-    def step_13_J2F(self, no):
+    def step_14_J2F(self, no):
         global NetHostObj        
         global natRules
         global nat
@@ -942,10 +980,10 @@ class JSON_2_FMC:
 
         return {"response" : True, "text" : NatR_txt}  
 
-########    step 14:
+########    step 15:
 ########    ACP/ NAT Policy Assignmentt check
            
-    def step_14_J2F(self, no):
+    def step_15_J2F(self, no):
         global ftd
         global acp
         global nat
@@ -991,10 +1029,10 @@ class JSON_2_FMC:
             
         return {"response" : True, "text" : ftd["id"]}  
         
-########    step 15:
+########    step 16:
 ########    Deployment
 #    
-    def step_15_J2F(self, no):
+    def step_16_J2F(self, no):
         global ftd        
         fmc_deployment=fmc.deployment.deployabledevices.get()
         if fmc_deployment["code"] < 300:

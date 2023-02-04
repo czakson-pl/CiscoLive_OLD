@@ -698,6 +698,8 @@ class deployment:
         self.conn=conn
         self.deployabledevices=deployabledevices(self.conn)
         self.deploymentrequests=deploymentrequests(self.conn)        
+        self.jobhistories=jobhistories(self.conn)
+
 class deployabledevices:
     def __init__(self,conn):
         self.conn=conn
@@ -740,6 +742,40 @@ class deploymentrequests:
         response = requests.post(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
 
         return {"code": response.status_code, "text": json.loads(response.text)}  
+
+class jobhistories:
+    def __init__(self,conn):
+        self.conn=conn
+
+    def get(self):
+        offset=0
+        limit=25
+        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/deployment/jobhistories?expanded=True'
+        url=self.conn.hostname+uri
+        response = requests.get(url, headers = self.conn.headers, verify=False)
+        if "items" in response.text.keys():
+            json_data=json.loads(response.text["items"])
+        else:
+            json_data=json.loads(response.text)
+
+        if "paging" in json_data.keys():
+            pages=json_data['paging']['pages']
+            json_list=json_data['items']
+        else:
+            pages=0
+            return {"code": response.status_code, "text": json_data}
+
+        while pages > 0:
+            offset=offset+25
+            uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/deployment/deployabledevices?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
+            url=self.conn.hostname+uri
+            response = requests.get(url, headers = self.conn.headers, verify=False)
+            json_data=json.loads(response.text)
+            if 'items' in json_data:
+                json_list=json_list+json_data['items']
+            pages=pages-1
+
+        return {"code": response.status_code, "text": json_list}  
 
 ################################################################################################################
 ### Assignement

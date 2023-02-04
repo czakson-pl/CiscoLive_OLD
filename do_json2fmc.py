@@ -72,120 +72,130 @@ else:
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()   
     
-    
+
+##### step 5 waiting for initial deployment to finish
 step=CiscoLive.step_5_J2F(5)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  found interfaces id's: "+str(step["text"]), 5)
+    print_colored('PASS', 'green', "The initial deployment finished successfully.: "+step["text"], 5)
 else:
-    print_colored('ERROR', 'red', "Error during interface id validation: "+str(step["text"]), 5)
+    print_colored('ERROR', 'red', "Error during initial deployment: "+str(step["text"]), 5)
+    print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
+    quit()   
+
+######### step 6 checking interfaces
+step=CiscoLive.step_6_J2F(6)
+if step["response"]: 
+    print_colored('PASS', 'green', "Successfully  found interfaces id's: "+str(step["text"]), 6)
+else:
+    print_colored('ERROR', 'red', "Error during interface id validation: "+str(step["text"]), 6)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()       
     
  
 
-########    step 6:
+########    step 7:
 ########    SecurityZone checks? 
-step=CiscoLive.step_6_J2F(6)
+step=CiscoLive.step_7_J2F(7)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  found SecurityZone id's: "+str(step["text"]), 6)
+    print_colored('PASS', 'green', "Successfully  found SecurityZone id's: "+str(step["text"]), 7)
 else:
-    print_colored('ERROR', 'red', "Error during SecurityZone id validation: "+str(step["text"]), 6)
+    print_colored('ERROR', 'red', "Error during SecurityZone id validation: "+str(step["text"]), 7)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()     
     
     
-########    step 7:
+########    step 8:
 ########    NetworkObjects checks 
-step=CiscoLive.step_7_J2F(7)
+step=CiscoLive.step_8_J2F(8)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  found Network Object id's: "+str(step["text"]), 7)
+    print_colored('PASS', 'green', "Successfully  found Network Object id's: "+str(step["text"]), 8)
 else:
-    print_colored('ERROR', 'red', "Error during Network Object id validation: "+str(step["text"]), 7)
+    print_colored('ERROR', 'red', "Error during Network Object id validation: "+str(step["text"]), 8)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()      
 
     
-########    step 8:
+########    step 9:
 ########    PORTProtocol checks 
-step=CiscoLive.step_8_J2F(8)
+step=CiscoLive.step_9_J2F(9)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  found Port/Protocol Object id's: "+str(step["text"]), 8)
+    print_colored('PASS', 'green', "Successfully  found Port/Protocol Object id's: "+str(step["text"]), 9)
 else:
-    print_colored('ERROR', 'red', "Error during Port/Protocol Object id validation: "+str(step["text"]), 8)
+    print_colored('ERROR', 'red', "Error during Port/Protocol Object id validation: "+str(step["text"]), 9)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()      
 
-########    step 9:
+########    step 10:
 ########    NetworkGoupr checks 
-step=CiscoLive.step_9_J2F(9)
+step=CiscoLive.step_10_J2F(10)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  found Network Group Object id's: "+str(step["text"]), 9)
+    print_colored('PASS', 'green', "Successfully  found Network Group Object id's: "+str(step["text"]), 10)
 else:
-    print_colored('ERROR', 'red', "Error during Network Group Object id validation: "+str(step["text"]), 9)
+    print_colored('ERROR', 'red', "Error during Network Group Object id validation: "+str(step["text"]), 10)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit() 
 
-########    step 10:
+########    step 11:
 ########    PORTProtocol Group checks 
-step=CiscoLive.step_10_J2F(10)
+step=CiscoLive.step_11_J2F(11)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  found Port/Protocol Group Object id's: "+str(step["text"]), 10)
+    print_colored('PASS', 'green', "Successfully  found Port/Protocol Group Object id's: "+str(step["text"]), 11)
 else:
-    print_colored('ERROR', 'red', "Error during Port/Protocol Group Object id validation: "+str(step["text"]), 10)
+    print_colored('ERROR', 'red', "Error during Port/Protocol Group Object id validation: "+str(step["text"]), 11)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()     
     
-########    step 11:
+########    step 12:
 ########    ACE checks 
-step=CiscoLive.step_11_J2F(11)
+step=CiscoLive.step_12_J2F(12)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  found id's for following ACE entries: "+str(step["text"]), 11)
+    print_colored('PASS', 'green', "Successfully  found id's for following ACE entries: "+str(step["text"]), 12)
 else:
-    print_colored('ERROR', 'red', "Error during ACE id validation: "+str(step["text"]), 11)
+    print_colored('ERROR', 'red', "Error during ACE id validation: "+str(step["text"]), 12)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()      
 
     
-########    step 12:
+########    step 13:
 ########    NAT policy checks 
-step=CiscoLive.step_12_J2F(12)
+step=CiscoLive.step_13_J2F(13)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  found id for NAT Policy: "+str(step["text"]), 12)
+    print_colored('PASS', 'green', "Successfully  found id for NAT Policy: "+str(step["text"]), 13)
 else:
-    print_colored('ERROR', 'red', "Error during NAT Policy id validation: "+str(step["text"]), 12)
+    print_colored('ERROR', 'red', "Error during NAT Policy id validation: "+str(step["text"]), 13)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()  
 
     
-########    step 13:
+########    step 14:
 ########    NAT RUle checks 
-step=CiscoLive.step_13_J2F(13)
+step=CiscoLive.step_14_J2F(14)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  found id's for following NAT Rules: "+str(step["text"]), 13)
+    print_colored('PASS', 'green', "Successfully  found id's for following NAT Rules: "+str(step["text"]), 14)
 else:
-    print_colored('ERROR', 'red', "Error during NAT Rules id validation: "+str(step["text"]), 13)
+    print_colored('ERROR', 'red', "Error during NAT Rules id validation: "+str(step["text"]), 14)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()    
     
-########    step 14:
+########    step 15:
 ########    ACP/NAT policy assignement check 
-step=CiscoLive.step_14_J2F(14)
+step=CiscoLive.step_15_J2F(15)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  checked Policy Assignemen for FTD id t: "+str(step["text"]), 14)
+    print_colored('PASS', 'green', "Successfully  checked Policy Assignemen for FTD id t: "+str(step["text"]), 15)
 else:
-    print_colored('ERROR', 'red', "Error during Policy Assignement validation for FTD id : "+str(step["text"]), 14)
+    print_colored('ERROR', 'red', "Error during Policy Assignement validation for FTD id : "+str(step["text"]), 15)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()  
         
-########    step 15:
+########    step 16:
 ########    Deployment
-step=CiscoLive.step_15_J2F(15)
+step=CiscoLive.step_16_J2F(16)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully  compleated deployment checks with result: "+str(step["text"]), 15)
+    print_colored('PASS', 'green', "Successfully  compleated deployment checks with result: "+str(step["text"]), 16)
 else:
-    print_colored('ERROR', 'red', "Error during the deployment: "+str(step["text"]), 15)
+    print_colored('ERROR', 'red', "Error during the deployment: "+str(step["text"]), 16)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)    
     quit()  
 
     
-print_colored("FINISHED! ", "blue", "Script completed successfully!", 16)
+print_colored("FINISHED! ", "blue", "Script completed successfully!", 17)
