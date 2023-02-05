@@ -525,7 +525,7 @@ class JSON_2_FMC:
             adding_acp=fmc.policy.accesspolicies.post(acp)
             if adding_acp["code"] < 300:
                 acp["id"]=adding_acp["text"]["id"]
-                print_colored('PASS', 'green', "Successfully  added ACP with id: "+acp["id"], no, 2)
+                print_colored('PASS', 'green', "Successfully added ACP with id: "+acp["id"], no, 2)
                 with open(file_ACP_json, 'w') as outfile:
                     json.dump(acp, outfile, indent = 4) 
                 ftd["accessPolicy"]["id"]=acp["id"]    
@@ -624,7 +624,7 @@ class JSON_2_FMC:
                 del each["links"] 
                 update_int_id(each["name"], each["id"])
                 #interfaces.append(each)
-                print_colored('ON HOLD', 'cyan', "Successfully  found interfaces id for: "+each["name"]+" id: "+each["id"], no, 1, noo)
+                print_colored('ON HOLD', 'cyan', "Successfully found interfaces id for: "+each["name"]+" id: "+each["id"], no, 1, noo)
                 int_id["ids"].append(each["id"])
                 noo=noo+1
 
@@ -635,7 +635,7 @@ class JSON_2_FMC:
             for each in interfaces:
                 int_update=fmc.devices.devicerecords.physicalinterfaces.put(each, ftd["id"])
                 if int_update["code"] < 300:
-                    print_colored('ON HOLD', 'cyan', "Successfully  updated the status of the interface id: "+each["id"], no, 2, noo)
+                    print_colored('ON HOLD', 'cyan', "Successfully updated the status of the interface id: "+each["id"], no, 2, noo)
                     noo=noo+1
                 else:
                     return {"response" : False, "text" : int_update["text"]}
@@ -783,7 +783,7 @@ class JSON_2_FMC:
                 else:
                     add_netgrp=fmc.object.networkgroups.post(each)
                     if add_netgrp["code"] < 300:
-                        print_colored('PASS', 'green', "Successfuly added NetGroupst Object with id: "+add_netgrp["text"][0]["id"], no, 1, noo)
+                        print_colored('PASS', 'green', "Successfully added NetGroupst Object with id: "+add_netgrp["text"][0]["id"], no, 1, noo)
                         NetworkGroups[obj_in_netGrps]["id"]=add_netgrp["text"][0]["id"]
                     else:
                         print_colored(add_netgrp["text"])
@@ -827,7 +827,7 @@ class JSON_2_FMC:
                 else:
                     add_portgrp=fmc.object.portobjectgroups.post(each)
                     if add_portgrp["code"] < 300:
-                        print_colored('PASS', 'green', "Successfuly added Port/Proto Group Object with id: "+add_portgrp["text"][0]["id"], no, 1, noo)
+                        print_colored('PASS', 'green', "Successfully added Port/Proto Group Object with id: "+add_portgrp["text"][0]["id"], no, 1, noo)
                         PortObjectGroups[obj_in_portGrps]["id"]=add_portgrp["text"][0]["id"]
                     else:
                         print_colored(add_portgrp["text"])
@@ -894,7 +894,7 @@ class JSON_2_FMC:
             adding_nat=fmc.policy.ftdnatpolicies.post(nat)
             if adding_nat["code"] < 300:
                 nat["id"]=adding_nat["text"]["id"]
-                print_colored('PASS', 'green', "Successfully  added NAT Policy with id: "+nat["id"], no, 2)
+                print_colored('PASS', 'green', "Successfully added NAT Policy with id: "+nat["id"], no, 2)
                 with open(file_NAT_json, 'w') as outfile:
                     json.dump(nat, outfile, indent = 4) 
                
@@ -988,7 +988,7 @@ class JSON_2_FMC:
             for each in PolicyAssignment:
                 fmc_PolicyAssignment=fmc.assignment.policyassignments.put(each)
                 if fmc_PolicyAssignment["code"] < 300:
-                    print_colored('PASS', 'green', "Successfully  assigned policy name: "+fmc_PolicyAssignment["text"]["name"], no, 5, noo)
+                    print_colored('PASS', 'green', "Successfully assigned policy name: "+fmc_PolicyAssignment["text"]["name"], no, 5, noo)
                     noo=noo+1
                 else:
                     return {"response" : False, "text" : fmc_PolicyAssignment["text"]}  
@@ -1055,8 +1055,8 @@ class JSON_2_FMC:
                         Deployment["deviceList"]=[ftd["id"]]
                         fmc_deployed=fmc.deployment.deploymentrequests.post(Deployment)
                         if fmc_deployed["code"] < 300:
-                            print_colored('PASS', 'green', "Successfully  sent deployment request for version: "+fmc_deployed["text"]["version"], no, 2)
-                            return {"response" : True, "text" : "Deployment request sent successfuly"}
+                            print_colored('PASS', 'green', "Successfully sent deployment request for version: "+fmc_deployed["text"]["version"], no, 2)
+                            return {"response" : True, "text" : "Deployment request sent successfully"}
                         else:
                             return {"response" : False, "text" : fmc_deployed["text"]} 
                 else:

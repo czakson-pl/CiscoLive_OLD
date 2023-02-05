@@ -172,9 +172,9 @@ else:
 ########    ACP/NAT policy assignement check 
 step=CiscoLive.step_14_J2F(14)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully checked Policy Assignemen for FTD id t: "+str(step["text"]), 14)
+    print_colored('PASS', 'green', "Successfully checked Policy Assignment for FTD id t: "+str(step["text"]), 14)
 else:
-    print_colored('ERROR', 'red', "Error during Policy Assignement validation for FTD id : "+str(step["text"]), 14)
+    print_colored('ERROR', 'red', "Error during Policy Assignment validation for FTD id : "+str(step["text"]), 14)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()  
 
@@ -192,7 +192,7 @@ else:
 ########    Deployment
 step=CiscoLive.step_16_J2F(16)
 if step["response"]: 
-    print_colored('PASS', 'green', "Successfully compleated deployment checks with result: "+str(step["text"]), 16)
+    print_colored('PASS', 'green', "Successfully completed deployment checks with result: "+str(step["text"]), 16)
 else:
     print_colored('ERROR', 'red', "Error during the deployment: "+str(step["text"]), 16)
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)    
