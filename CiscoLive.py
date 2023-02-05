@@ -337,7 +337,7 @@ def UpdateACEID():
   
     with open(file_NAT_Rule_json, 'w') as outfile:
         json.dump(ace, outfile, indent = 4)   
-    print_colored('PASS', 'green', "Updated ACE with object id...", 9, 2)  
+    print_colored('PASS', 'green', "Updated ACE with object id...", 12, 1)  
 
 
 ##### Update NatR ID
@@ -371,7 +371,7 @@ def UpdateNatRID():
   
     with open(file_NAT_Rule_json, 'w') as outfile:
         json.dump(natRules, outfile, indent = 4)   
-    print_colored('PASS', 'green', "Updated Nat Rule with object id...", 11, 2)  
+    print_colored('PASS', 'green', "Updated Nat Rule with object id...", 14, 2)  
 
 #########################################################################################################
 ####################   JSON to FMC part of the code
@@ -592,7 +592,8 @@ class JSON_2_FMC:
                     return {"response" : False, "text" : "Cannot find FTD on the list newly added devices. Most likely FTD not fully enrolled yet or wrong IP/regKey of FTD used."}      
             else:
                 return {"response" : False, "text" : "Error while polling the list of newly added devices."+str(adding_ftd["text"])}
-            
+
+#"jobStatus": "Deployed",        
 ########    step 5:
 ########    Interfaces checks?
            
@@ -775,16 +776,18 @@ class JSON_2_FMC:
 
         obj_in_netGrps=0 
         if CheckNetGrpsID():
+            noo=1
             for each in NetworkGroups:
                 if "id" in each.keys():
                     NetGrps_txt=each["id"]+", "+NetGrps_txt
                 else:
                     add_netgrp=fmc.object.networkgroups.post(each)
                     if add_netgrp["code"] < 300:
-                        print_colored('PASS', 'green', "Successfuly added NetGroupst Object with id: "+add_netgrp["text"][0]["id"], 9)
+                        print_colored('PASS', 'green', "Successfuly added NetGroupst Object with id: "+add_netgrp["text"][0]["id"], no, 1, noo)
                         NetworkGroups[obj_in_netGrps]["id"]=add_netgrp["text"][0]["id"]
                     else:
                         print_colored(add_netgrp["text"])
+                    noo=noo+1
                 obj_in_netGrps=obj_in_netGrps+1
             
                 
@@ -817,16 +820,18 @@ class JSON_2_FMC:
 
         obj_in_portGrps=0 
         if CheckPortProtoGrpID():
+            noo=1
             for each in PortObjectGroups:
                 if "id" in each.keys():
                     PortGrps_txt=each["id"]+", "+PortGrps_txt
                 else:
                     add_portgrp=fmc.object.portobjectgroups.post(each)
                     if add_portgrp["code"] < 300:
-                        print_colored('PASS', 'green', "Successfuly added Port/Proto Group Object with id: "+add_portgrp["text"][0]["id"], 3)
+                        print_colored('PASS', 'green', "Successfuly added Port/Proto Group Object with id: "+add_portgrp["text"][0]["id"], no, 1, noo)
                         PortObjectGroups[obj_in_portGrps]["id"]=add_portgrp["text"][0]["id"]
                     else:
                         print_colored(add_portgrp["text"])
+                noo=noo+1
                 obj_in_portGrps=obj_in_portGrps+1
             
                 
@@ -851,7 +856,7 @@ class JSON_2_FMC:
         if not CheckACEID():
             print_colored('ON HOLD', 'cyan', "Updating ACE with object id...", no, noo)
             UpdateACEID()
-            noo=1
+            noo=noo+1
             nooo=1
             
         
@@ -990,11 +995,49 @@ class JSON_2_FMC:
             
             
         return {"response" : True, "text" : ftd["id"]}  
-        
+
 ########    step 15:
+########    Initial deployment checks?
+    def step_15_J2F(self, no):
+        nooo=1
+        repeats=10
+        deployment=False
+        while repeats != 0:
+            jobH=fmc.deployment.jobhistories.get()   
+            if jobH["code"] < 300:
+                if isinstance(jobH["text"], list):
+                    for each in jobH["text"]:
+                        if each["jobStatus"].upper() != "DEPLOYED":
+                            #print(each["jobStatus"].upper())
+                            # and each["jobType"].upper() == "DEPLOYMENT":
+                            deployment=True
+
+                    if not deployment:
+                        #if "jobStatus" in jobH["text"][len(jobH["text"])-1].keys():
+                        return {"response" : True, "text" : "Initial deployment completed."}
+                        repeats=0
+                    else:
+                        print_colored('ON HOLD', 'cyan', "There is an ongoing deployment, waiting for 30 sec, no of retries: "+ str(repeats), no, nooo)
+                        repeats=repeats-1
+                        nooo=nooo+1
+                        deployment=False
+                        time.sleep(30)   
+                    
+                else:
+                    print_colored('ON HOLD', 'cyan', "Initial deployment task has not been issued yet, waiting for 30 sec, no of retries: "+ str(repeats), no, nooo)
+                    repeats=repeats-1
+                    nooo=nooo+1
+                    time.sleep(30)                           
+            else:
+                return {"response" : False, "text" : "Error while polling the current deployment."+str(jobH["text"])} 
+
+        return {"response" : False, "text" : "Error while polling the current deployment."+str(jobH["text"])}
+
+
+########    step 16:
 ########    Deployment
 #    
-    def step_15_J2F(self, no):
+    def step_16_J2F(self, no):
         global ftd        
         fmc_deployment=fmc.deployment.deployabledevices.get()
         if fmc_deployment["code"] < 300:

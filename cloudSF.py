@@ -753,17 +753,17 @@ class jobhistories:
         uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/deployment/jobhistories?expanded=True'
         url=self.conn.hostname+uri
         response = requests.get(url, headers = self.conn.headers, verify=False)
-        if "items" in response.text.keys():
-            json_data=json.loads(response.text["items"])
-        else:
-            json_data=json.loads(response.text)
+        json_data=json.loads(response.text)
 
         if "paging" in json_data.keys():
             pages=json_data['paging']['pages']
             json_list=json_data['items']
         else:
             pages=0
-            return {"code": response.status_code, "text": json_data}
+            if "items" in json_data.keys():
+                return {"code": response.status_code, "text": json_data["items"]}
+            else:
+                return {"code": response.status_code, "text": json_data}
 
         while pages > 0:
             offset=offset+25
