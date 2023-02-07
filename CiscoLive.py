@@ -262,8 +262,9 @@ def CheckNetGrpsID():
     for each in NetworkGroups:
         if "objects" in each.keys():
             for NetGrps_obj in each["objects"]:
-                if "id" not in NetGrps_obj.keys():
-                    NetworkGroups[row]["objects"][row_obj]["id"]=net_name2id(NetGrps_obj["name"])
+                if isinstance(NetGrps_obj, list):
+                    if "id" not in NetGrps_obj.keys():
+                        NetworkGroups[row]["objects"][row_obj]["id"]=net_name2id(NetGrps_obj["name"])
                     #print("Updated ID for Net/Host Object name: "+NetworkGroups[row]["objects"][row_obj]["name"])
                 row_obj=row_obj+1
         row=row+1  
@@ -786,7 +787,7 @@ class JSON_2_FMC:
                         print_colored('PASS', 'green', "Successfully added NetGroupst Object with id: "+add_netgrp["text"][0]["id"], no, 1, noo)
                         NetworkGroups[obj_in_netGrps]["id"]=add_netgrp["text"][0]["id"]
                     else:
-                        print_colored(add_netgrp["text"])
+                        print_colored('WARNING','yellow', add_netgrp["text"], no, 1, noo)
                     noo=noo+1
                 obj_in_netGrps=obj_in_netGrps+1
             
