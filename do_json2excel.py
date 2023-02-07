@@ -716,8 +716,8 @@ if isinstance(nat, list):
 else:
     ws_nat["A"+str(row)]=nat["name"]
     ws_nat["B"+str(row)]=nat["type"]
-    if "id" in acp.keys():    
-        ws_nat["D"+str(row)]=nat["id"]
+    if "id" in nat.keys():    
+        ws_nat["C"+str(row)]=nat["id"]
 
 
 print_colored('PASS', 'green', "Successfully parsed NAT sheet",  13)
