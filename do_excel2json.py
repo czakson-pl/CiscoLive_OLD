@@ -215,7 +215,7 @@ while row <= ws_Device.max_row:
         if lic != "":
             lic_obj.append(lic)
     dictionary["license_caps"]=lic_obj
-    if ws_nat["H"+str(row)].value != None:
+    if ws_Device["H"+str(row)].value != None:
         dictionary["id"]=ws_Device["H"+str(row)].value
     lista.append(dictionary)
 
@@ -386,7 +386,7 @@ print_colored('PASS', 'green', "Successfully saved the file: "+file_NetHostObjec
 if os.path.exists(file_ProtocolPortObject_json):
     with open(file_ProtocolPortObject_json) as json_file:
         ProtocolPortObject=json.load(json_file)
-        
+
 row=2
 lista=[]
 while row <= ws_ProtocolPortObject.max_row:
