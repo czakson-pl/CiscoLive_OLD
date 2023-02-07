@@ -383,7 +383,10 @@ print_colored('PASS', 'green', "Successfully saved the file: "+file_NetHostObjec
 
 #ws_ProtocolPortObject
 #A-name	B-type	C-protocol	D-port	E-description	F-overridable	G-id
-
+if os.path.exists(file_ProtocolPortObject_json):
+    with open(file_ProtocolPortObject_json) as json_file:
+        ProtocolPortObject=json.load(json_file)
+        
 row=2
 lista=[]
 while row <= ws_ProtocolPortObject.max_row:
@@ -413,6 +416,10 @@ print_colored('PASS', 'green', "Successfully saved the file: "+file_ProtocolPort
 
 #ws_NetworkGroups
 #A-name	B-type	C-literals	D-literals_type	E-literals_value	F-objects	G-object_name	H-description	I-overridable	J-id
+
+if os.path.exists(file_NetworkGroups_json):
+    with open(file_NetworkGroups_json) as json_file:
+        NetworkGroups=json.load(json_file) 
 
 row=2
 lista=[]
