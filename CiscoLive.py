@@ -203,29 +203,49 @@ def update_PolicyAssignment():
 def CheckACEID():
     global ace
     id_exists=True
+    if isinstance(ace, list):
+        for each in ace:
 
-    for each in ace:
+            for sourceZones_obj in each["sourceZones"]["objects"]:
+                if "id" not in sourceZones_obj.keys():
+                    id_exists=False
+            
+            for destinationZones_obj in each["destinationZones"]["objects"]:
+                if "id" not in destinationZones_obj.keys():
+                    id_exists=False
+                
+            for sourceNetworks_obj in each["sourceNetworks"]["objects"]:            
+                if "id" not in sourceNetworks_obj.keys():
+                    id_exists=False
 
-        for sourceZones_obj in each["sourceZones"]["objects"]:
+            for destinationNetworks_obj in each["destinationNetworks"]["objects"]:             
+                if "id" not in destinationNetworks_obj.keys():
+                    id_exists=False
+
+            for destinationPorts_obj in each["destinationPorts"]["objects"]: 
+                if "id" not in destinationPorts_obj.keys():
+                    id_exists=False
+    else:
+        for sourceZones_obj in ace["sourceZones"]["objects"]:
             if "id" not in sourceZones_obj.keys():
                 id_exists=False
         
-        for destinationZones_obj in each["destinationZones"]["objects"]:
+        for destinationZones_obj in ace["destinationZones"]["objects"]:
             if "id" not in destinationZones_obj.keys():
                 id_exists=False
             
-        for sourceNetworks_obj in each["sourceNetworks"]["objects"]:            
+        for sourceNetworks_obj in ace["sourceNetworks"]["objects"]:            
             if "id" not in sourceNetworks_obj.keys():
                 id_exists=False
 
-        for destinationNetworks_obj in each["destinationNetworks"]["objects"]:             
+        for destinationNetworks_obj in ace["destinationNetworks"]["objects"]:             
             if "id" not in destinationNetworks_obj.keys():
                 id_exists=False
 
-        for destinationPorts_obj in each["destinationPorts"]["objects"]: 
+        for destinationPorts_obj in ace["destinationPorts"]["objects"]: 
             if "id" not in destinationPorts_obj.keys():
                 id_exists=False
-    
+
     return id_exists
 
 #check if NAT rule has all ids
