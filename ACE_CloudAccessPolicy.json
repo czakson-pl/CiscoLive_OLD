@@ -1,64 +1,66 @@
-{
-  "enabled": true,
-  "action": "ALLOW",
-  "type": "AccessRule",
-  "enableSyslog": false,
-  "vlanTags": {},
-  "sourceZones": {
-    "objects": [
-      {
-        "name": "Outside",
-        "type": "SecurityZone"
-      }
-    ]
-  },
-  "destinationZones": {
-    "objects": [
-      {
-        "name": "Inside",
-        "type": "SecurityZone"
-      }
-    ]
-  },
-  "sourceNetworks": {
-    "objects": [
-      {
-        "type": "Network",
-        "overridable": false,
-        "name": "any-ipv4"
-      }
-    ]
-  },
-  "destinationNetworks": {
-    "objects": [
-      {
-        "type": "Host",
-        "overridable": false,
-        "name": "Serv-a"
-      }
-    ]
-  },
-  "logBegin": true,
-  "logEnd": false,
-  "variableSet": {
-    "name": "Default Set",
-    "id": "76fa83ea-c972-11e2-8be8-8e45bb1343c0",
-    "type": "VariableSet"
-  },
-  "logFiles": false,
-  "destinationPorts": {
-    "objects": [
-      {
-        "type": "ProtocolPortObject",
-        "protocol": "TCP",
-        "overridable": false,
-        "id": "18312adc-38bb-11e2-86aa-62f0c593a59a",
-        "name": "HTTP"
-      }
-    ]
-  },
-  "sourceDynamicObjects": {},
-  "destinationDynamicObjects": {},
-  "sendEventsToFMC": true,
-  "name": "WebTraffic"
-}
+[
+	{
+	  "enabled": true,
+	  "action": "ALLOW",
+	  "type": "AccessRule",
+	  "enableSyslog": false,
+	  "vlanTags": {},
+	  "sourceZones": {
+		"objects": [
+		  {
+			"name": "Outside",
+			"type": "SecurityZone"
+		  }
+		]
+	  },
+	  "destinationZones": {
+		"objects": [
+		  {
+			"name": "Inside",
+			"type": "SecurityZone"
+		  }
+		]
+	  },
+	  "sourceNetworks": {
+		"objects": [
+		  {
+			"type": "Network",
+			"overridable": false,
+			"name": "any-ipv4"
+		  }
+		]
+	  },
+	  "destinationNetworks": {
+		"objects": [
+		  {
+			"type": "Host",
+			"overridable": false,
+			"name": "Serv-a"
+		  }
+		]
+	  },
+	  "logBegin": true,
+	  "logEnd": false,
+	  "variableSet": {
+		"name": "Default Set",
+		"id": "76fa83ea-c972-11e2-8be8-8e45bb1343c0",
+		"type": "VariableSet"
+	  },
+	  "logFiles": false,
+	  "destinationPorts": {
+		"objects": [
+		  {
+			"type": "ProtocolPortObject",
+			"protocol": "TCP",
+			"overridable": false,
+			"id": "18312adc-38bb-11e2-86aa-62f0c593a59a",
+			"name": "HTTP"
+		  }
+		]
+	  },
+	  "sourceDynamicObjects": {},
+	  "destinationDynamicObjects": {},
+	  "sendEventsToFMC": true,
+	  "name": "WebTraffic"
+	}
+]
