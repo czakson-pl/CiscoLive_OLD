@@ -97,13 +97,13 @@ def get_ProtocolPortObject(name):
                 return {"name": each["name"], "type": each["type"], "overridable": each["overridable"]}          
     return None 
 
-file_excel="cloudSF.xlsx"
+file_excel="cloudSF_PDO.xlsx"
 
 file_FTDv_json="FTDv.json"
 file_Interfaces_json="Interfaces.json"
 file_SecurityZone_json="SecurityZones.json"
 file_ACP_json="ACP.json"
-file_ACE_json="ACE_CloudAccessPolicy.json"
+file_ACE_json="ACE_PDO-DC-FTD-ACP_NEW.json"
 file_NAT_json="NAT.json"
 file_NAT_Rule_json="NAT_Entries.json"
 file_NetHostObject_json= "NetHostObject.json"
@@ -112,7 +112,7 @@ file_NetworkGroups_json= "NetworkGroups.json"
 file_PortObjectGroups_json= "PortObjectGroups.json"
 file_PolicyAssignment="PolicyAssignment.json"
 
-print_colored("START: ", "blue", "Script will poll the configuration from FMC and save it to JSON files ",  1)
+print_colored("START: ", "blue", "Script will poll the configuration from excel and save it to JSON files ",  1)
 
 if os.path.exists(file_excel):
     wb = load_workbook(filename=file_excel)
@@ -187,8 +187,9 @@ while row <= ws_nat.max_row:
         
     row=row+1  
 
+
 with open(file_NAT_json, 'w') as outfile:
-    json.dump(lista[0], outfile, indent = 4)
+    json.dump(lista, outfile, indent = 4)
 
 if os.path.exists(file_NAT_json):
     with open(file_NAT_json) as json_file:
@@ -200,10 +201,11 @@ print_colored('PASS', 'green', "Successfully saved the file: "+file_NAT_json, 4)
 #name	type	id
 row=2
 lista=[]
-
+Policy_Assign=[]
 while row <= ws_Device.max_row:
     dictionary={}
     if ws_Device["A"+str(row)].value == None:
+        print()
         break    
     dictionary["name"]=ws_Device["A"+str(row)].value
     dictionary["hostName"]=ws_Device["B"+str(row)].value
@@ -219,7 +221,6 @@ while row <= ws_Device.max_row:
         dictionary["id"]=ws_Device["H"+str(row)].value
     lista.append(dictionary)
 
-    Policy_Assign=[]
     if ws_Device["E"+str(row)].value != None:
         PolicyType=get_ACP(ws_Device["E"+str(row)].value)
         if ws_Device["H"+str(row)].value == None:
@@ -237,13 +238,14 @@ while row <= ws_Device.max_row:
         Policy_Assign.append({"type": "PolicyAssignment", "policy": PolicyType, "targets": TargetDevice, "name":ws_Device["F"+str(row)].value })
     row=row+1  
 
+
 with open(file_PolicyAssignment, 'w') as outfile:
     json.dump(Policy_Assign, outfile, indent = 4)
 
 print_colored('PASS', 'green', "Successfully saved the file: "+file_PolicyAssignment, 5) 
 
 with open(file_FTDv_json, 'w') as outfile:
-    json.dump(lista[0], outfile, indent = 4)
+    json.dump(lista, outfile, indent = 4)
 
 if os.path.exists(file_FTDv_json):
     with open(file_FTDv_json) as json_file:
@@ -298,22 +300,8 @@ int_obj=[]
 sec_zone_obj={}
 StartToBuild=True
 while row <= ws_SecurityZones.max_row+1:
-    if ws_SecurityZones["C"+str(row)].value == None:
-        if not StartToBuild:
-            
-            each["interfaces"]=int_obj
-            lista.append(each)
-        break
-
-    if ws_SecurityZones["A"+str(row)].value == None:
-        int_obj.append(get_Int(ws_SecurityZones["C"+str(row)].value))
-        StartToBuild=False
-    else:
-        #there is name to the sec zone
-        int_obj=[]
-        int_obj.append(get_Int(ws_SecurityZones["C"+str(row)].value))
-        if StartToBuild:
-            #this is first run
+    if StartToBuild:
+        if ws_SecurityZones["A"+str(row)].value != None:
             if ws_SecurityZones["E"+str(row)].value != None:
                 desc=ws_SecurityZones["E"+str(row)].value
             else:
@@ -321,12 +309,21 @@ while row <= ws_SecurityZones.max_row+1:
             if ws_SecurityZones["E"+str(row)].value == None:        
                 each={'name': ws_SecurityZones["A"+str(row)].value, 'type': ws_SecurityZones["B"+str(row)].value, 'description' : desc, 'interfaceMode': 'ROUTED'}
             else:
-                each={'name': ws_SecurityZones["A"+str(row)].value, 'type': ws_SecurityZones["B"+str(row)].value, 'description' : desc, 'interfaceMode': 'ROUTED', 'id': ws_SecurityZones["E"+str(row)].value}
-            each["interfaces"]=int_obj    
+                each={'name': ws_SecurityZones["A"+str(row)].value, 'type': ws_SecurityZones["B"+str(row)].value, 'description' : desc, 'interfaceMode': 'ROUTED', 'id': ws_SecurityZones["E"+str(row)].value}                            
+            
+            if ws_SecurityZones["C"+str(row)].value != None:
+                int_obj.append(get_Int(ws_SecurityZones["C"+str(row)].value))
             StartToBuild=False
         else:
-            #it is next run 
+            break
+    else:
+        if ws_SecurityZones["A"+str(row)].value != None:
+            if len(int_obj) > 0:
+                each["interfaces"]=int_obj
             lista.append(each)
+            each={}
+            int_obj=[]
+
             if ws_SecurityZones["E"+str(row)].value != None:
                 desc=ws_SecurityZones["E"+str(row)].value
             else:
@@ -334,9 +331,20 @@ while row <= ws_SecurityZones.max_row+1:
             if ws_SecurityZones["E"+str(row)].value == None:        
                 each={'name': ws_SecurityZones["A"+str(row)].value, 'type': ws_SecurityZones["B"+str(row)].value, 'description' : desc, 'interfaceMode': 'ROUTED'}
             else:
-                each={'name': ws_SecurityZones["A"+str(row)].value, 'type': ws_SecurityZones["B"+str(row)].value, 'description' : desc, 'interfaceMode': 'ROUTED', 'id': ws_SecurityZones["E"+str(row)].value}            
-            each["interfaces"]=int_obj
+                each={'name': ws_SecurityZones["A"+str(row)].value, 'type': ws_SecurityZones["B"+str(row)].value, 'description' : desc, 'interfaceMode': 'ROUTED', 'id': ws_SecurityZones["E"+str(row)].value}                            
             
+            if ws_SecurityZones["C"+str(row)].value != None:
+                int_obj.append(get_Int(ws_SecurityZones["C"+str(row)].value))
+
+        else:
+            if ws_SecurityZones["C"+str(row)].value != None:
+                int_obj.append(get_Int(ws_SecurityZones["C"+str(row)].value))
+            else:
+                if len(int_obj) > 0:
+                    each["interfaces"]=int_obj
+                lista.append(each)
+                break
+ 
     row=row+1
 
 with open(file_SecurityZone_json, 'w') as outfile:
@@ -378,7 +386,7 @@ if os.path.exists(file_NetHostObject_json):
     with open(file_NetHostObject_json) as json_file:
         NetHostObject=json.load(json_file)
         
-print_colored('PASS', 'green', "Successfully saved the file: "+file_NetHostObject_json, 9) 
+print_colored('PASS', 'green', "Successfully saved "+str(len(NetHostObject))+" objects to the file: "+file_NetHostObject_json, 9) 
 
 
 #ws_ProtocolPortObject
@@ -411,7 +419,7 @@ if os.path.exists(file_ProtocolPortObject_json):
     with open(file_ProtocolPortObject_json) as json_file:
         ProtocolPortObject=json.load(json_file)
  
-print_colored('PASS', 'green', "Successfully saved the file: "+file_ProtocolPortObject_json, 10) 
+print_colored('PASS', 'green', "Successfully saved "+str(len(ProtocolPortObject))+" objects to the file: "+file_ProtocolPortObject_json, 10) 
 
 
 #ws_NetworkGroups
@@ -472,7 +480,7 @@ if os.path.exists(file_NetworkGroups_json):
         NetworkGroups=json.load(json_file) 
 
 
-print_colored('PASS', 'green', "Successfully saved the file: "+file_NetworkGroups_json, 11) 
+print_colored('PASS', 'green', "Successfully saved "+str(len(NetworkGroups))+" objects to the file: "+file_NetworkGroups_json, 11) 
                 
 
 
@@ -527,7 +535,7 @@ if os.path.exists(file_PortObjectGroups_json):
     with open(file_PortObjectGroups_json) as json_file:
         PortObjectGroups=json.load(json_file)   
 
-print_colored('PASS', 'green', "Successfully saved the file: "+file_PortObjectGroups_json, 12)
+print_colored('PASS', 'green', "Successfully saved "+str(len(PortObjectGroups))+" objects to the file: "+file_PortObjectGroups_json, 12)
   
 
 #ws_ace
@@ -548,30 +556,30 @@ while row <= ws_ace.max_row+1:
     if ws_ace["B"+str(row)].value == None and ws_ace["E"+str(row)].value == None and ws_ace["F"+str(row)].value == None and ws_ace["E"+str(row)].value == None and ws_ace["F"+str(row)].value == None and ws_ace["G"+str(row)].value == None :
         #end of the parsing
         if not StartToBuild:
-            if len(sourceZones) !=0:
+            if len(sourceZones) > 0:
                 each["sourceZones"]={"objects": sourceZones}
-            if len(destinationZones) !=0:
+            if len(destinationZones) > 0:
                 each["destinationZones"]={"objects": destinationZones}
-            if len(sourceNetworks) !=0:
+            if len(sourceNetworks) > 0:
                 each["sourceNetworks"]={"objects": sourceNetworks}
-            if len(destinationNetworks) !=0:
+            if len(destinationNetworks) > 0:
                 each["destinationNetworks"]={"objects": destinationNetworks}
-            if len(destinationPorts) !=0:
+            if len(destinationPorts) > 0:
                 each["destinationPorts"]={"objects": destinationPorts}       
             lista.append(each)    
         break
     if ws_ace["B"+str(row)].value != None:
         #next line in the excel 
         if not StartToBuild:
-            if len(sourceZones) !=0:
+            if len(sourceZones) > 0:
                 each["sourceZones"]={"objects": sourceZones}
-            if len(destinationZones) !=0:
+            if len(destinationZones) > 0:
                 each["destinationZones"]={"objects": destinationZones}
-            if len(sourceNetworks) !=0:
+            if len(sourceNetworks) > 0:
                 each["sourceNetworks"]={"objects": sourceNetworks}
-            if len(destinationNetworks) !=0:
+            if len(destinationNetworks) > 0:
                 each["destinationNetworks"]={"objects": destinationNetworks}
-            if len(destinationPorts) !=0:
+            if len(destinationPorts) > 0:
                 each["destinationPorts"]={"objects": destinationPorts} 
             sourceZones=[]
             destinationZones=[]	
@@ -587,39 +595,55 @@ while row <= ws_ace.max_row+1:
             each["id"]=ws_ace["N"+str(row)].value
         if bool(ws_ace["K"+str(row)].value) or bool(ws_ace["L"+str(row)].value):
             each['sendEventsToFMC']=bool("true")
-            
+        
+        
         if ws_ace["C"+str(row)].value != None:
-            sourceZones.append(get_SecurityZone(ws_ace["C"+str(row)].value))
+            SecurityZone_obj=get_SecurityZone(ws_ace["C"+str(row)].value)
+            if SecurityZone_obj != None:
+                sourceZones.append(SecurityZone_obj)
         if ws_ace["D"+str(row)].value != None:
-            destinationZones.append(get_SecurityZone(ws_ace["D"+str(row)].value)) 
+            destinationZones_obj=get_SecurityZone(ws_ace["D"+str(row)].value)
+            if destinationZones_obj != None:
+                destinationZones.append(destinationZones_obj) 
         if ws_ace["E"+str(row)].value != None:
-            sourceNetworks.append(get_Object(ws_ace["E"+str(row)].value)) 
+            sourceNetworks_obj=get_Object(ws_ace["E"+str(row)].value)
+            if sourceNetworks_obj != None:
+                sourceNetworks.append(sourceNetworks_obj) 
         if ws_ace["F"+str(row)].value != None:
-            destinationNetworks.append(get_Object(ws_ace["F"+str(row)].value)) 
+            destinationNetworks_obj=get_Object(ws_ace["F"+str(row)].value)
+            if destinationNetworks_obj != None:
+                destinationNetworks.append(destinationNetworks_obj) 
         if ws_ace["G"+str(row)].value != None:
-            destinationPorts.append(get_ProtocolPortObject(ws_ace["G"+str(row)].value))    
+            destinationPorts_obj=get_ProtocolPortObject(ws_ace["G"+str(row)].value)
+            if destinationPorts_obj != None:
+                destinationPorts.append(destinationPorts_obj)    
 
-                    
         StartToBuild=False    
     else:
         if ws_ace["C"+str(row)].value != None:
-            sourceZones.append(get_SecurityZone(ws_ace["C"+str(row)].value))
+            SecurityZone_obj=get_SecurityZone(ws_ace["C"+str(row)].value)
+            if SecurityZone_obj != None:
+                sourceZones.append(SecurityZone_obj)
         if ws_ace["D"+str(row)].value != None:
-            destinationZones.append(get_SecurityZone(ws_ace["D"+str(row)].value)) 
+            destinationZones_obj=get_SecurityZone(ws_ace["D"+str(row)].value)
+            if destinationZones_obj != None:
+                destinationZones.append(destinationZones_obj) 
         if ws_ace["E"+str(row)].value != None:
-            sourceNetworks.append(get_Object(ws_ace["E"+str(row)].value)) 
+            sourceNetworks_obj=get_Object(ws_ace["E"+str(row)].value)
+            if sourceNetworks_obj != None:
+                sourceNetworks.append(sourceNetworks_obj) 
         if ws_ace["F"+str(row)].value != None:
-            destinationNetworks.append(get_Object(ws_ace["F"+str(row)].value)) 
+            destinationNetworks_obj=get_Object(ws_ace["F"+str(row)].value)
+            if destinationNetworks_obj != None:
+                destinationNetworks.append(destinationNetworks_obj) 
         if ws_ace["G"+str(row)].value != None:
-            destinationPorts.append(get_ProtocolPortObject(ws_ace["G"+str(row)].value))  
+            destinationPorts_obj=get_ProtocolPortObject(ws_ace["G"+str(row)].value)
+            if destinationPorts_obj != None:
+                destinationPorts.append(destinationPorts_obj)  
     row=row+1
-
-
-
     
 with open(file_ACE_json, 'w') as outfile:
     json.dump(lista, outfile, indent = 4)
-
 
 print_colored('PASS', 'green', "Successfully saved the file: "+file_ACE_json, 13) 
 

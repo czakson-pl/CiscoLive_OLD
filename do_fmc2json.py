@@ -49,15 +49,15 @@ if ftd["code"] < 300:
 else:
     print_colored('ERROR: ', 'red', str(ftd["text"]), 2)
 
+if len(ftd["text"]) < 0:
+    interfaces=fmc.devices.devicerecords.physicalinterfaces.get(ftd["text"][0]["id"])
+    if interfaces["code"] < 300:
+        with open(file_Interfaces_json, 'w') as outfile:
+            json.dump(interfaces["text"], outfile, indent = 4)
 
-interfaces=fmc.devices.devicerecords.physicalinterfaces.get(ftd["text"][0]["id"])
-if interfaces["code"] < 300:
-    with open(file_Interfaces_json, 'w') as outfile:
-        json.dump(interfaces["text"], outfile, indent = 4)
-
-    print_colored('PASS: ', 'green', 'Saved Interfaces to the file: '+file_Interfaces_json, 3)
-else:
-    print_colored('ERROR: ', 'red', str(interfaces["text"]), 3)
+        print_colored('PASS: ', 'green', 'Saved Interfaces to the file: '+file_Interfaces_json, 3)
+    else:
+        print_colored('ERROR: ', 'red', str(interfaces["text"]), 3)
 
 
 SecurityZone_json=fmc.object.securityzones.get()
@@ -91,7 +91,7 @@ for each in ACP_json["text"]:
                 with open(file_ACE_json+each["name"]+".json", 'w') as outfile:
                     json.dump(ACE_json["text"], outfile, indent = 4)
             
-                print_colored('PASS: ', 'green', "Saved ACE to the file: "+file_ACE_json+each["name"]+".json", 6, no)
+                print_colored('PASS: ', 'green', "Saved ACE "+str(len(ACE_json["text"]))+"to the file: "+file_ACE_json+each["name"]+".json", 6, no)
             else:
                 print_colored('ERROR: ', 'red', str(ACE_json["text"]), 6)
         no=no+1
@@ -108,7 +108,7 @@ if NetHostObject_host["code"] < 300 and NetHostObject_net["code"] < 300 :
     with open(file_NetHostObject_json, 'w') as outfile:
         json.dump(NetHostObject_json, outfile, indent = 4)
 
-    print_colored('PASS: ', 'green', "Saved Network/Host Object to the file: "+file_NetHostObject_json, 7)
+    print_colored('PASS: ', 'green', "Saved Network "+str(len(NetHostObject_net["text"]))+"/Host "+str(len(NetHostObject_host["text"]))+" Object to the file: "+file_NetHostObject_json, 7)
 else:
     print_colored('ERROR: ', 'red', str(NetHostObject_host["text"])+str(NetHostObject_net["text"]), 7)
 
@@ -118,7 +118,7 @@ if ProtocolPortObject_json["code"] < 300:
     with open(file_ProtocolPortObject_json, 'w') as outfile:
         json.dump(ProtocolPortObject_json["text"], outfile, indent = 4)
 
-    print_colored('PASS: ', 'green', "Saved Protocol/Port Object to the file: "+file_ProtocolPortObject_json, 8)
+    print_colored('PASS: ', 'green', "Saved Protocol/Port "+str(len(ProtocolPortObject_json["text"]))+" Object to the file: "+file_ProtocolPortObject_json, 8)
 else:
     print_colored('ERROR: ', 'red', str(ProtocolPortObject_json["text"]), 8)
 
@@ -128,7 +128,7 @@ if NetworkGroups_json["code"] < 300:
     with open(file_NetworkGroups_json, 'w') as outfile:
         json.dump(NetworkGroups_json["text"], outfile, indent = 4)
 
-    print_colored('PASS: ', 'green', "Saved Network Groups Object to the file: "+file_NetworkGroups_json, 9)
+    print_colored('PASS: ', 'green', "Saved Network Groups "+str(len(NetworkGroups_json["text"]))+" Object to the file: "+file_NetworkGroups_json, 9)
 else:
     print_colored('ERROR: ', 'red', str(NetworkGroups_json["text"]), 9)
 
@@ -138,7 +138,7 @@ if PortObjectGroups_json["code"] < 300:
     with open(file_PortObjectGroups_json, 'w') as outfile:
         json.dump(PortObjectGroups_json["text"], outfile, indent = 4)
 
-    print_colored('PASS: ', 'green', "Saved Protocol/Port Object to the file: "+file_PortObjectGroups_json, 10)
+    print_colored('PASS: ', 'green', "Saved Protocol/Port "+str(len(PortObjectGroups_json["text"]))+" Object to the file: "+file_PortObjectGroups_json, 10)
 else:
     print_colored('ERROR: ', 'red', str(PortObjectGroups_json["text"]), 10)
 
@@ -152,16 +152,18 @@ if nat_json["code"] < 300:
 else:
     print_colored('ERROR: ', 'red', str(nat_json["text"]), 11)
 
+if len(nat_json["text"]) > 0:
+    natR_json=fmc.policy.ftdnatpolicies.manualnatrules.get(nat_json["text"][0]["id"])
+    if natR_json["code"] < 300:
+        with open(file_NAT_Rule_json, 'w') as outfile:
+            json.dump(natR_json['text'], outfile, indent = 4)
 
-natR_json=fmc.policy.ftdnatpolicies.manualnatrules.get(nat_json["text"][0]["id"])
-if natR_json["code"] < 300:
-    with open(file_NAT_Rule_json, 'w') as outfile:
-        json.dump(natR_json['text'], outfile, indent = 4)
-
-    print_colored('PASS: ', 'green', "Saved NAT Rules Object to the file: "+file_NAT_Rule_json, 12)
+        print_colored('PASS: ', 'green', "Saved NAT Rules Object to the file: "+file_NAT_Rule_json, 12)
+    else:
+        print_colored('ERROR: ', 'red', str(natR_json["text"]), 12)
 else:
-    print_colored('ERROR: ', 'red', str(natR_json["text"]), 12)
-
+    with open(file_NAT_Rule_json, 'w') as outfile:
+        json.dump([], outfile, indent = 4)
 
 policyAssign_json=fmc.assignment.policyassignments.get()
 if policyAssign_json["code"] < 300:

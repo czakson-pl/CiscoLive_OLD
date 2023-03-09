@@ -10,11 +10,11 @@ from termcolor import colored
 
 
 file_blank_excel="cloudSF_blank.xlsx"
-file_excel="test_new.xlsx"
+file_excel="cloudSF_PDO.xlsx"
 
 file_vFTD_json="FTDv.json"
 file_ACP_json="ACP.json"
-file_ACE_json="ACE_CloudAccessPolicy.json"
+file_ACE_json="ACE_PDO-DC-FTD-ACP_NEW.json"
 file_NAT_json="NAT.json"
 file_NAT_Rule_json="NAT_Entries.json"
 file_Interfaces_json="Interfaces.json"
@@ -118,7 +118,13 @@ def add_NetHostObj(obj):
             noo=0
             for each in NetHostObj:
                 if each["name"] == obj["name"]:
-                    NetHostObj[noo]["id"] = updated_Obj["text"]["id"]
+                    if "text" in updated_Obj.keys():
+                        if "id" in updated_Obj["text"]:
+                            NetHostObj[noo]["id"] = updated_Obj["text"]["id"]
+                        else:
+                            print(updated_Obj)
+                    else:
+                        print(updated_Obj)
                 noo=noo+1
 
             #save to file
@@ -137,7 +143,9 @@ def add_NetHostObj(obj):
             noo=0
             for each in NetHostObj:
                 if each["name"] == obj["name"]:
-                    NetHostObj[noo]["id"] = updated_Obj["text"]["id"]
+                    if "text" in updated_Obj.keys():
+                        if "id" in updated_Obj["text"]:
+                            NetHostObj[noo]["id"] = updated_Obj["text"]["id"]
                 noo=noo+1
 
             #save to file
@@ -281,12 +289,13 @@ def CheckNetGrpsID():
     NetGrps_hlp=[]
     for each in NetworkGroups:
         if "objects" in each.keys():
-            for NetGrps_obj in each["objects"]:
-                if isinstance(NetGrps_obj, list):
-                    if "id" not in NetGrps_obj.keys():
-                        NetworkGroups[row]["objects"][row_obj]["id"]=net_name2id(NetGrps_obj["name"])
+            if isinstance(each["objects"], list):
+                for NetGrps_obj in each["objects"]:
+                    if isinstance(NetGrps_obj, dict):
+                        if "id" not in NetGrps_obj.keys():
+                            NetworkGroups[row]["objects"][row_obj]["id"]=net_name2id(NetGrps_obj["name"])
                     #print("Updated ID for Net/Host Object name: "+NetworkGroups[row]["objects"][row_obj]["name"])
-                row_obj=row_obj+1
+                    row_obj=row_obj+1
         row=row+1  
         row_obj=0        
         
@@ -375,7 +384,6 @@ def UpdateNatRID():
         no_sourceNetworks=0
         no_destinationNetworks=0
         no_destinationPorts=0
-        no=0
         if "id" not in each["sourceInterface"].keys():
             natRules[no]["sourceInterface"]["id"]=SZ_name2id(natRules[no]["sourceInterface"]["name"])
         if "id" not in each["destinationInterface"].keys():
@@ -438,7 +446,8 @@ class JSON_2_FMC:
                 global ftd
                 ftd=json.load(json_file)
                 if isinstance(ftd, list):
-                    ftd=ftd[0]
+                    if len(ftd) > 0:
+                        ftd=ftd[0]
         else:
             return {"response": False, "text" : file_vFTD_json}                
 
@@ -447,7 +456,8 @@ class JSON_2_FMC:
                 global acp
                 acp=json.load(json_file)  
                 if isinstance(acp, list):
-                    acp=acp[0]
+                    if len(acp) > 0:
+                        acp=acp[0]
         else:
             return {"response": False, "text" : file_ACP_json}                
 
@@ -456,7 +466,8 @@ class JSON_2_FMC:
                 global nat
                 nat=json.load(json_file) 
                 if isinstance(nat, list):
-                    nat=nat[0]
+                    if len(nat) > 0:
+                        nat=nat[0]
         else:
             return {"response": False, "text" : file_NAT_json}
 
@@ -539,24 +550,26 @@ class JSON_2_FMC:
     def step_3_J2F(self, no):
         global fmc    
         global acp
-        if "id" in acp.keys():
-            return {"response" : True, "text" : acp["id"]}              
-        else:
-            print_colored('ON HOLD', 'cyan', "No ACP id found, adding ACP: ", no, 1)
-            adding_acp=fmc.policy.accesspolicies.post(acp)
-            if adding_acp["code"] < 300:
-                acp["id"]=adding_acp["text"]["id"]
-                print_colored('PASS', 'green', "Successfully added ACP with id: "+acp["id"], no, 2)
-                with open(file_ACP_json, 'w') as outfile:
-                    json.dump(acp, outfile, indent = 4) 
-                ftd["accessPolicy"]["id"]=acp["id"]    
-                with open(file_vFTD_json, 'w') as outfile:
-                    json.dump(ftd, outfile, indent = 4)                     
-                    
-                return {"response" : True, "text" : acp["id"]}
+        if len(acp) > 0:
+            if "id" in acp.keys():
+                return {"response" : True, "text" : acp["id"]}              
             else:
-                return {"response" : False, "text" : adding_acp["text"]}
-
+                print_colored('ON HOLD', 'cyan', "No ACP id found, adding ACP: ", no, 1)
+                adding_acp=fmc.policy.accesspolicies.post(acp)
+                if adding_acp["code"] < 300:
+                    acp["id"]=adding_acp["text"]["id"]
+                    print_colored('PASS', 'green', "Successfully added ACP with id: "+acp["id"], no, 2)
+                    with open(file_ACP_json, 'w') as outfile:
+                        json.dump(acp, outfile, indent = 4) 
+                    ftd["accessPolicy"]["id"]=acp["id"]    
+                    with open(file_vFTD_json, 'w') as outfile:
+                        json.dump(ftd, outfile, indent = 4)                     
+                        
+                    return {"response" : True, "text" : acp["id"]}
+                else:
+                    return {"response" : False, "text" : adding_acp["text"]}
+        else:
+            return {"response" : True, "text" : "SKIPPED - No ACP found"}
             
         return {"response" : True, "text" : acp["id"]}     
         
@@ -565,55 +578,67 @@ class JSON_2_FMC:
            
     def step_4_J2F(self, no):
         global ftd
-        if "id" in ftd.keys():
-            return {"response" : True, "text" : ftd["id"]}              
-        else:
-            print_colored('ON HOLD', 'cyan', "No FTD id found, adding FTD: "+ftd["name"], no, 1)
-            adding_ftd=fmc.devices.devicerecords.post(ftd)
-            if adding_ftd["code"] < 300:
-                task_id=adding_ftd["text"]["metadata"]["task"]["id"]
-                print_colored('ON HOLD', 'cyan', "Successfully sent the request to add FTD with task id: "+task_id, no, 2)
-                nooo=1
-                repeats=10
-                while repeats != 0:
-                    adding_ftd=fmc.job.taskstatuses.get(task_id)
-                    
-                    if adding_ftd["code"] < 300:
-                        print_colored('ON HOLD', 'cyan', "Status: "+adding_ftd["text"]["status"]+" waiting for 30 sec, no of retries: "+str(repeats), no, 3, nooo)
-                        nooo=nooo+1
-                        repeats=repeats-1
-                        time.sleep(30)
-                    else:
-                        print_colored('ON HOLD', 'cyan', "Initialization completed, checking the FTD status...", no, 3)
-                        break
-            
-            adding_ftd=fmc.devices.devicerecords.get()          
-            if adding_ftd["code"] < 300:
-                print_colored('ON HOLD', 'cyan', "Searching for FTDs...", no, 4)
-                if isinstance(adding_ftd["text"], list):
-                    adding_ftd["text"]=adding_ftd["text"][0]
-                if "id" in adding_ftd["text"]:
-                        print_colored('ON HOLD', 'cyan', "Found FTD: "+adding_ftd["text"]["id"]+" ...checking details", no, 5)
-                        nooo=1
-                        repeats=10
-                        while repeats != 0:
-                            ftd_details=fmc.devices.devicerecords.get(adding_ftd["text"]["id"])
-                            if ftd_details["code"] < 300:
-                                ftd["id"]=ftd_details["text"]["id"]
-                                with open(file_vFTD_json, 'w') as outfile:
-                                    json.dump(ftd, outfile, indent = 4)                  
-                                print_colored('ON HOLD', 'cyan', "Registration completed for FTD name: "+ftd_details["text"]["name"]+" and S/N "+ftd_details["text"]["metadata"]["deviceSerialNumber"], no, 6)        
-                                return {"response" : True, "text" : ftd["id"]}
-                            else:
-                                print_colored('ON HOLD', 'cyan', "FTD not registered yet, waiting for 30 sec, no of retries: "+ str(repeats), no, 6, nooo)
-                                repeats=repeats-1
-                                nooo=nooo+1
-                                time.sleep(30)                                
-                else:
-                    return {"response" : False, "text" : "Cannot find FTD on the list newly added devices. Most likely FTD not fully enrolled yet or wrong IP/regKey of FTD used."}      
+        if len(ftd) > 0:
+            if "id" in ftd.keys():
+                return {"response" : True, "text" : ftd["id"]}              
             else:
-                return {"response" : False, "text" : "Error while polling the list of newly added devices."+str(adding_ftd["text"])}
-
+                print_colored('ON HOLD', 'cyan', "No FTD id found, adding FTD: "+ftd["name"], no, 1)
+                adding_ftd=fmc.devices.devicerecords.post(ftd)
+                if adding_ftd["code"] < 300:
+                    task_id=adding_ftd["text"]["metadata"]["task"]["id"]
+                    print_colored('ON HOLD', 'cyan', "Successfully sent the request to add FTD with task id: "+task_id, no, 2)
+                    nooo=1
+                    repeats=10
+                    while repeats != 0:
+                        adding_ftd=fmc.job.taskstatuses.get(task_id)
+                        
+                        if adding_ftd["code"] < 300:
+                            print_colored('ON HOLD', 'cyan', "Status: "+adding_ftd["text"]["status"]+" waiting for 30 sec, no of retries: "+str(repeats), no, 3, nooo)
+                            nooo=nooo+1
+                            repeats=repeats-1
+                            time.sleep(30)
+                        else:
+                            print_colored('ON HOLD', 'cyan', "Initialization completed, checking the FTD status...", no, 3)
+                            break
+                
+                adding_ftd=fmc.devices.devicerecords.get()          
+                if adding_ftd["code"] < 300:
+                    print_colored('ON HOLD', 'cyan', "Searching for FTDs...", no, 4)
+                    if isinstance(adding_ftd["text"], list):
+                        adding_ftd["text"]=adding_ftd["text"][0]
+                    if "id" in adding_ftd["text"]:
+                            print_colored('ON HOLD', 'cyan', "Found FTD: "+adding_ftd["text"]["id"]+" ...checking details", no, 5)
+                            nooo=1
+                            repeats=10
+                            while repeats != 0:
+                                ftd_details=fmc.devices.devicerecords.get(adding_ftd["text"]["id"])
+                                if ftd_details["code"] < 300:
+                                    if isinstance(ftd_details["text"], list):
+                                        for each in ftd_details["text"]:
+                                            if "id" in ftd_details["text"].keys():
+                                                ftd["id"]=each["id"]
+                                        with open(file_vFTD_json, 'w') as outfile:
+                                            json.dump(ftd, outfile, indent = 4)                  
+                                        print_colored('ON HOLD', 'cyan', "Registration completed for FTD name: "+ftd["name"], no, 6)        
+                                        return {"response" : True, "text" : ftd["id"]}    
+                                    else:
+                                        if "id" in ftd_details["text"].keys():
+                                            ftd["id"]=ftd_details["text"]["id"]
+                                        with open(file_vFTD_json, 'w') as outfile:
+                                            json.dump(ftd, outfile, indent = 4)                  
+                                        print_colored('ON HOLD', 'cyan', "Registration completed for FTD name: "+ftd_details["text"]["name"]+" and S/N "+ftd_details["text"]["metadata"]["deviceSerialNumber"], no, 6)        
+                                        return {"response" : True, "text" : ftd["id"]}
+                                else:
+                                    print_colored('ON HOLD', 'cyan', "FTD not registered yet, waiting for 30 sec, no of retries: "+ str(repeats), no, 6, nooo)
+                                    repeats=repeats-1
+                                    nooo=nooo+1
+                                    time.sleep(30)                                
+                    else:
+                        return {"response" : False, "text" : "Cannot find FTD on the list newly added devices. Most likely FTD not fully enrolled yet or wrong IP/regKey of FTD used."}      
+                else:
+                    return {"response" : False, "text" : "Error while polling the list of newly added devices."+str(adding_ftd["text"])}
+        else:
+             return {"response" : True, "text" : "SKIPPED - No FTD found"}
 #"jobStatus": "Deployed",        
 ########    step 5:
 ########    Interfaces checks?
@@ -623,49 +648,53 @@ class JSON_2_FMC:
         global ftd
         int_id={}
         int_id["ids"]=[]
-        for each in interfaces:
-            if "id" in each.keys():
-                int_id["found"]=True
-                int_id["ids"].append(each["id"])
-            else:
-                int_id["found"]=False
-                break
-        
-        if int_id["found"]:
-            return {"response" : True, "text" : int_id["ids"]}   
-        else:
-            print_colored('ON HOLD', 'cyan', "No interfaces id found, polling the interfaces id for FTD: "+ftd["id"], no, 1)
-            #interfaces=[]
-            int_to_print=""
-            int_response=fmc.devices.devicerecords.physicalinterfaces.get(ftd["id"])
-            
-            #updating interface id
-            noo=1
-            for each in int_response["text"]:
-                del each["links"] 
-                update_int_id(each["name"], each["id"])
-                #interfaces.append(each)
-                print_colored('ON HOLD', 'cyan', "Successfully found interfaces id for: "+each["name"]+" id: "+each["id"], no, 1, noo)
-                int_id["ids"].append(each["id"])
-                noo=noo+1
-
-             
-            print_colored('ON HOLD', 'cyan', "Updating interface status... ", no, 2)
-            #updating interface status
-            noo=1            
+        if len(ftd) > 0:
             for each in interfaces:
-                int_update=fmc.devices.devicerecords.physicalinterfaces.put(each, ftd["id"])
-                if int_update["code"] < 300:
-                    print_colored('ON HOLD', 'cyan', "Successfully updated the status of the interface id: "+each["id"], no, 2, noo)
-                    noo=noo+1
+                if "id" in each.keys():
+                    int_id["found"]=True
+                    int_id["ids"].append(each["id"])
                 else:
-                    return {"response" : False, "text" : int_update["text"]}
+                    int_id["found"]=False
+                    break
+            
+            if int_id["found"]:
+                return {"response" : True, "text" : int_id["ids"]}   
+            else:
+                print_colored('ON HOLD', 'cyan', "No interfaces id found, polling the interfaces id for FTD: "+ftd["id"], no, 1)
+                #interfaces=[]
+                int_to_print=""
+                int_response=fmc.devices.devicerecords.physicalinterfaces.get(ftd["id"])
+                
+                #updating interface id
+                noo=1
+                for each in int_response["text"]:
+                    del each["links"] 
+                    update_int_id(each["name"], each["id"])
+                    #interfaces.append(each)
+                    print_colored('ON HOLD', 'cyan', "Successfully found interfaces id for: "+each["name"]+" id: "+each["id"], no, 1, noo)
+                    int_id["ids"].append(each["id"])
+                    noo=noo+1
 
-            with open(file_Interfaces_json, 'w') as outfile:
-                json.dump(interfaces, outfile, indent = 4) 
+                
+                print_colored('ON HOLD', 'cyan', "Updating interface status... ", no, 2)
+                #updating interface status
+                noo=1            
+                for each in interfaces:
+                    int_update=fmc.devices.devicerecords.physicalinterfaces.put(each, ftd["id"])
+                    if int_update["code"] < 300:
+                        print_colored('ON HOLD', 'cyan', "Successfully updated the status of the interface id: "+each["id"], no, 2, noo)
+                        noo=noo+1
+                    else:
+                        return {"response" : False, "text" : int_update["text"]}
 
-            return {"response" : True, "text" : int_id["ids"]}  
-            #adding_ftd=fmc.devices.devicerecords.post(ftd)    
+                with open(file_Interfaces_json, 'w') as outfile:
+                    json.dump(interfaces, outfile, indent = 4) 
+                with open(file_Interfaces_json) as json_file:
+                    interfaces=json.load(json_file)
+
+                return {"response" : True, "text" : int_id["ids"]}  
+        else:
+             return {"response" : True, "text" : "SKIPPED - No FTD found, not processing interfaces"}
             
             
 ########    step 6:
@@ -693,11 +722,12 @@ class JSON_2_FMC:
             hlp_SecurityZone=[]
             for each_SZ in SecurityZone:
                 each_int_hlp=[]
-                for each_int in each_SZ["interfaces"]:
-                    if "id" not in each_int.keys():
-                        each_int["id"]=int_name2id(each_int["name"])
-                    each_int_hlp.append(each_int)
-                each_SZ["interfaces"]=each_int_hlp
+                if "interfaces" in each_SZ:
+                    for each_int in each_SZ["interfaces"]:
+                        if "id" not in each_int.keys():
+                            each_int["id"]=int_name2id(each_int["name"])
+                        each_int_hlp.append(each_int)
+                    each_SZ["interfaces"]=each_int_hlp
                 hlp_SecurityZone.append(each_SZ)
 
             print_colored('ON HOLD', 'cyan', "Updated the id for interfaces included in SecurityZones... ", no, 2)
@@ -719,7 +749,9 @@ class JSON_2_FMC:
             
             with open(file_SecurityZone_json, 'w') as outfile:
                 json.dump(hlp2_SecurityZone, outfile, indent = 4)
-                
+            with open(file_SecurityZone_json) as json_file:
+                SecurityZone=json.load(json_file) 
+
         return {"response" : True, "text" : SZ_id["ids"]}  
         
         
@@ -729,25 +761,31 @@ class JSON_2_FMC:
            
     def step_7_J2F(self, no):
         global NetHostObj
-        NetHostObj_txt=""
+        NetHostObj_no=0
 
         for each in NetHostObj:
             if "id" not in each.keys():
                 print_colored('ON HOLD', 'cyan', "Network/Host Object id not found, adding object: "+each["name"], no, 1)
                 adding_NetHostObj=add_NetHostObj(each)
                 if adding_NetHostObj["code"] < 300:
-                    print_colored('ON HOLD', 'cyan', "Successfully added object with id: "+adding_NetHostObj["text"]["id"], no, 1, 1)
-                    NetHostObj_txt=NetHostObj_txt+adding_NetHostObj["text"]["name"]+", "
+                    if "id" in adding_NetHostObj["text"].keys():
+                        print_colored('ON HOLD', 'cyan', "Successfully added object with id: "+adding_NetHostObj["text"]["id"], no, 1, 1)
+                    else:
+                        print_colored('ON HOLD', 'cyan', "Successfully added object with id: "+str(adding_NetHostObj), no, 1, 1)
+                    if "name" in adding_NetHostObj["text"].keys():
+                        NetHostObj_no=NetHostObj_no+1
                 else:
-                    return {"response" : False, "text" : adding_NetHostObj["text"]}  
+                    print_colored('WARNING', 'yellow', str(adding_NetHostObj["text"]), no, 1, 1)
+                #    return {"response" : False, "text" : adding_NetHostObj["text"]}  
             else:
-                NetHostObj_txt=NetHostObj_txt+each["name"]+", "
-        
+                NetHostObj_no+=1
         
             with open(file_NetHostObj_json, 'w') as outfile:
                 json.dump(NetHostObj, outfile, indent = 4)
-                
-        return {"response" : True, "text" : NetHostObj_txt}  
+            with open(file_NetHostObj_json) as json_file:
+                NetHostObj=json.load(json_file)     
+
+        return {"response" : True, "text" : str(NetHostObj_no)}  
         
         
 ########    step 8:
@@ -756,7 +794,7 @@ class JSON_2_FMC:
     def step_8_J2F(self, no):
 
         global ProtocolPortObject
-        ProtocolPortObject_txt=""
+        ProtocolPortObject_no=0
 
         for each in ProtocolPortObject:
             if "id" not in each.keys():
@@ -765,23 +803,24 @@ class JSON_2_FMC:
 
                 if adding_ProtocolPortObject["code"] < 300:
                     print_colored('ON HOLD', 'cyan', "Successfully added object with id: "+adding_ProtocolPortObject["text"]["id"], no, 1, 1)
-                    ProtocolPortObject_txt=ProtocolPortObject_txt+adding_ProtocolPortObject["text"]["name"]+", "
+                    ProtocolPortObject_no+=1
                 else:
                     return {"response" : False, "text" : adding_ProtocolPortObject["text"]}  
             else:
-                ProtocolPortObject_txt=ProtocolPortObject_txt+each["name"]+", "
-        
+                ProtocolPortObject_no+=1
         
             with open(file_ProtocolPortObject_json, 'w') as outfile:
                 json.dump(ProtocolPortObject, outfile, indent = 4)
-                
-        return {"response" : True, "text" : ProtocolPortObject_txt} 
+            with open(file_ProtocolPortObject_json) as json_file:
+                ProtocolPortObject=json.load(json_file) 
+
+        return {"response" : True, "text" : str(ProtocolPortObject_no)} 
         
 ########    step 9:
 ########    Net/Host Groups checks 
            
     def step_9_J2F(self, no):
-        NetGrps_txt=""
+        NetGrps_no=0
         NetGrps_on_fmc={}
         global NetworkGroups
         #create acp dict from fmc
@@ -800,7 +839,7 @@ class JSON_2_FMC:
             noo=1
             for each in NetworkGroups:
                 if "id" in each.keys():
-                    NetGrps_txt=each["id"]+", "+NetGrps_txt
+                    NetGrps_no+=1
                 else:
                     add_netgrp=fmc.object.networkgroups.post(each)
                     if add_netgrp["code"] < 300:
@@ -809,19 +848,21 @@ class JSON_2_FMC:
                     else:
                         print_colored('WARNING','yellow', add_netgrp["text"], no, 1, noo)
                     noo=noo+1
-                obj_in_netGrps=obj_in_netGrps+1
+                obj_in_netGrps+=1
             
                 
             with open(file_NetworkGroups_json, 'w') as outfile:
                 json.dump(NetworkGroups, outfile, indent = 4)
+            with open(file_NetworkGroups_json) as json_file:
+                NetworkGroups=json.load(json_file) 
         
-        return {"response" : True, "text" : NetGrps_txt} 
+        return {"response" : True, "text" : str(NetGrps_no)} 
 
 ########    step 10:
 ########    PortProto Groups checks 
            
     def step_10_J2F(self, no):
-        PortGrps_txt=""
+        PortGrps_no=0
         PortGrps_on_fmc={}
         global PortObjectGroups
         #create acp dict from fmc
@@ -844,7 +885,7 @@ class JSON_2_FMC:
             noo=1
             for each in PortObjectGroups:
                 if "id" in each.keys():
-                    PortGrps_txt=each["id"]+", "+PortGrps_txt
+                    PortGrps_no+=1
                 else:
                     add_portgrp=fmc.object.portobjectgroups.post(each)
                     if add_portgrp["code"] < 300:
@@ -858,8 +899,10 @@ class JSON_2_FMC:
                 
             with open(file_PortObjectGroups_json, 'w') as outfile:
                 json.dump(PortObjectGroups, outfile, indent = 4)
+            with open(file_PortObjectGroups_json) as json_file:
+                PortObjectGroups=json.load(json_file)  
 
-        return {"response" : True, "text" : PortGrps_txt}
+        return {"response" : True, "text" : str(PortGrps_no)}
 
 ########    step 11:
 ########    ACE 
@@ -870,7 +913,7 @@ class JSON_2_FMC:
         global ftd        
         global acp
         global ace   
-        ACE_txt=""
+        ACE_no=0
         noo=1
 
         nooo=1
@@ -888,7 +931,7 @@ class JSON_2_FMC:
                 added_ACE=fmc.policy.accesspolicies.accessrules.post(each, acp["id"])
                 if added_ACE["code"] < 300:
                     
-                    ACE_txt=ACE_txt+added_ACE["text"]["name"]+", "
+                    ACE_no+=1
                     update_ace_id(each["name"], added_ACE["text"]["id"])
                     
                     with open(file_ACE_json, 'w') as outfile:
@@ -898,9 +941,9 @@ class JSON_2_FMC:
                 nooo=nooo+1
                     
             else:
-                ACE_txt=ACE_txt+each["name"]+", "   
+                ACE_no+=1
             noo=noo+1    
-        return {"response" : True, "text" : ACE_txt}  
+        return {"response" : True, "text" : str(ACE_no)}  
 
 
 ########    step 12:
@@ -934,7 +977,7 @@ class JSON_2_FMC:
         global NetHostObj        
         global natRules
         global nat
-        NatR_txt=""
+        NatR_no=0
         noo=1
 
         nooo=1
@@ -953,20 +996,23 @@ class JSON_2_FMC:
                 added_NatR=fmc.policy.ftdnatpolicies.manualnatrules.post(each, nat["id"])
                 if added_NatR["code"] < 300:
                     #print(json.dumps(added_NatR["text"], indent=4))
-                    NatR_txt=NatR_txt+str(added_NatR["text"]["metadata"]["index"])+", "
+                    NatR_no+=1
                     natRules[row]["id"]=added_NatR["text"]["id"]
                     
                     with open(file_NAT_Rule_json, 'w') as outfile:
                         json.dump(natRules, outfile, indent = 4)
+                    with open(file_NAT_Rule_json) as json_file:
+                        natRules=json.load(json_file) 
+                
                 else:
                     return {"response" : False, "text" : added_NatR["text"] }
                 nooo=nooo+1                        
             else:
-                NatR_txt=NatR_txt+each["type"]+", "   
+                NatR_no+=1   
             noo=noo+1   
             row=row+1 
 
-        return {"response" : True, "text" : NatR_txt}  
+        return {"response" : True, "text" : str(NatR_no)}  
 
 ########    step 14:
 ########    ACP/ NAT Policy Assignmentt check

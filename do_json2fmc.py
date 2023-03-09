@@ -94,7 +94,7 @@ else:
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()     
     
-    
+
 ########    step 7:
 ########    NetworkObjects checks 
 step=CiscoLive.step_7_J2F(7)
@@ -105,7 +105,7 @@ else:
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()      
 
-    
+
 ########    step 8:
 ########    PORTProtocol checks 
 step=CiscoLive.step_8_J2F(8)
@@ -146,7 +146,7 @@ else:
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)
     quit()      
 
-    
+
 ########    step 12:
 ########    NAT policy checks 
 step=CiscoLive.step_12_J2F(12)
@@ -198,5 +198,5 @@ else:
     print_colored('EXITING', 'magenta', "Please fix the problem and restart the script", 0)    
     quit()  
 
-    
+
 print_colored("FINISHED! ", "blue", "Script completed successfully!", 17)

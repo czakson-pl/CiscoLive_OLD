@@ -7,6 +7,7 @@ import requests
 import json
 import base64
 import getpass
+import time
 
 #disabling warning about unsecure https
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -22,6 +23,8 @@ class Connect:
         verify_cert=False, #for now it is hardcoded - tbc
     ):
         self.hostname=hostname
+        self.username=username
+        self.password=password
         #building FMC URL
         #this is URI to get the domain uuid:
         uri='/api/fmc_platform/v1/info/domain'
@@ -39,6 +42,7 @@ class Connect:
         self.headers = {'x-auth-access-token' : XauthToken, 'X-auth-refresh-token' : XauthRefToken, 'Content-Type' : "application/json"}
 
         response = requests.get(url, headers = self.headers, verify=False)
+
 
         #getting UUID from the response
         self.uuid = json.loads(response.text)['items'][0]['uuid']
@@ -85,12 +89,17 @@ class securityzones:
         url=self.conn.hostname+uri
         response = requests.get(url, headers = self.conn.headers, verify=False)
         json_data=json.loads(response.text)
-        pages=json_data['paging']['pages']
+        if "paging" in json_data.keys():
+            pages=json_data['paging']['pages']
+        else:
+            pages=0
         if pages != 0:
             json_list=json_data['items']
         else:
-            return {"code": response.status_code, "text": json_data}
-
+            if "item" in json_data.keys():
+                return {"code": response.status_code, "text": json_data['items']}
+            else:
+                return {"code": response.status_code, "text": []}
         while pages > 0:
             offset=offset+25
             uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/securityzones?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
@@ -116,41 +125,49 @@ class networks:
         self.conn=conn
     def get(self, uuid=None):
         offset=0
-        limit=25
-        if uuid is not None:
-            uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networks/'+uuid+'&expanded=True'
-            url=self.conn.hostname+uri
-            response = requests.get(url, headers = self.conn.headers, verify=False)            
-            if response.status_code != 200:
-                return response.status_code, response.text            
-            json_list=json.loads(response.text)
-           
-        else:
+        limit=100
+        if uuid is None:
             uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networks?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
+        else:
+            uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networks/'+uuid+'&expanded=True'
+
+        url=self.conn.hostname+uri
+        response = requests.get(url, headers = self.conn.headers, verify=False)            
+        if response.status_code == 429:
+            print("We have to wait due to HTTP 429")
+            time.sleep(45)
+            response = requests.get(url, headers = self.conn.headers, verify=False)     
+
+        json_data=json.loads(response.text)
+        
+        if "paging" in json_data.keys():
+            pages=json_data['paging']['pages']
+        else:
+            pages=0
+        if pages != 0:
+            json_list=json_data['items']
+        else:
+            return {"code": response.status_code, "text": json_data}
+
+        while pages > 0:
+            offset=offset+limit
+            if uuid is None:
+                uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networks?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
+            else:
+                uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networks/'+uuid+'&expanded=True'
+
             url=self.conn.hostname+uri
             response = requests.get(url, headers = self.conn.headers, verify=False)
-            if response.status_code != 200:
-                return response.status_code, response.text
-        
-            json_data=json.loads(response.text)
-            if "paging" in json_data.keys():
-                pages=json_data['paging']['pages']
-            else:
-                pages=0
-            if pages != 0:
-                json_list=json_data['items']
-            else:
-                return {"code": response.status_code, "text": json_data}
-                
-            while pages > 0:
-                offset=offset+25
-                uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networks?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
-                url=self.conn.hostname+uri
+
+            if response.status_code == 429:
+                print("We have to wait due to HTTP 429")
+                time.sleep(45)
                 response = requests.get(url, headers = self.conn.headers, verify=False)
-                json_data=json.loads(response.text)
-                if 'items' in json_data:
-                    json_list=json_list+json_data['items']            
-                pages=pages-1
+
+            json_data=json.loads(response.text)
+            if 'items' in json_data:
+                json_list=json_list+json_data['items']            
+            pages=pages-1
             
         return {"code": response.status_code, "text": json_list}  
         
@@ -159,6 +176,7 @@ class networks:
         url=self.conn.hostname+uri 
         response = requests.delete(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
         json_data=json.loads(response.text)
+
         if 'items' in json_data.keys():
             json_list=json_data['items'] 
         else:
@@ -170,6 +188,7 @@ class networks:
         url=self.conn.hostname+uri 
         response = requests.post(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
         json_data=json.loads(response.text)
+
         if 'items' in json_data.keys():
             json_list=json_data['items'] 
         else:
@@ -181,6 +200,7 @@ class networks:
         url=self.conn.hostname+uri 
         response = requests.put(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
         json_data=json.loads(response.text)
+
         if 'items' in json_data.keys():
             json_list=json_data['items'] 
         else:
@@ -192,13 +212,19 @@ class hosts:
         self.conn=conn
     def get(self, uuid=None):
         offset=0
-        limit=25
+        limit=100
         if uuid is None:        
-            uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/hosts?expanded=True'
+            uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/hosts?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
         else:
-            uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/hosts/uuid'
+            uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/hosts/'+uuid
         url=self.conn.hostname+uri
         response = requests.get(url, headers = self.conn.headers, verify=False)
+
+        if response.status_code == 429:
+            print("We have to wait due to HTTP 429")
+            time.sleep(45)
+            response = requests.get(url, headers = self.conn.headers, verify=False)
+
         json_data=json.loads(response.text)
         if "paging" in json_data.keys():
             pages=json_data['paging']['pages']    
@@ -209,20 +235,28 @@ class hosts:
             json_list=json_data['items']
         else:
             return {"code": response.status_code, "text": json_data}
-            
+
         while pages > 0:
-            offset=offset+25
+            offset=offset+limit
             if uuid is None: 
                 uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/hosts?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
             else:
                 uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/hosts/'+uuid+'?offset='+str(offset)+'&limit='+str(limit)
             url=self.conn.hostname+uri
+
             response = requests.get(url, headers = self.conn.headers, verify=False)
+
+            if response.status_code == 429:
+                print("We have to wait due to HTTP 429")
+                time.sleep(45)
+                response = requests.get(url, headers = self.conn.headers, verify=False)
+
             json_data=json.loads(response.text)
             if 'items' in json_data:
-                json_list=json_list+json_data['items']            
+                json_list=json_list+json_data['items']      
             pages=pages-1
             
+        
         return {"code": response.status_code, "text": json_list}  
 
     def delete(self, uuid, data_payload):
@@ -241,7 +275,15 @@ class hosts:
         uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/hosts?bulk=true'
         url=self.conn.hostname+uri 
         response = requests.post(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
+
+        if response.status_code == 429:
+            print("We have to wait due to HTTP 429")
+            time.sleep(45)
+            response = requests.post(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
+
         json_data=json.loads(response.text)
+
+
         if 'items' in json_data.keys():
             json_list=json_data['items']
         else:
@@ -253,6 +295,8 @@ class hosts:
         url=self.conn.hostname+uri 
         response = requests.put(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
         json_data=json.loads(response.text)
+
+
         if 'items' in json_data.keys():
             json_list=json_data['items']
         else:
@@ -264,19 +308,26 @@ class protocolportobjects:
         self.conn=conn
     def get(self):
         offset=0
-        limit=25    
-        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/protocolportobjects?expanded=True'
+        limit=100    
+        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/protocolportobjects?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
         url=self.conn.hostname+uri
         response = requests.get(url, headers = self.conn.headers, verify=False)
         json_data=json.loads(response.text)
-        pages=json_data['paging']['pages'] 
+
+        if "paging" in json_data.keys():
+            pages=json_data['paging']['pages']
+        else:
+            pages=0
         if pages != 0:
             json_list=json_data['items']
         else:
-            return {"code": response.status_code, "text": json_data} 
+            if "item" in json_data.keys():
+                return {"code": response.status_code, "text": json_data['items']}
+            else:
+                return {"code": response.status_code, "text": []}
             
         while pages > 0:
-            offset=offset+25
+            offset=offset+limit
             uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/protocolportobjects?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
             url=self.conn.hostname+uri
             response = requests.get(url, headers = self.conn.headers, verify=False)
@@ -286,6 +337,18 @@ class protocolportobjects:
             pages=pages-1
             
         return {"code": response.status_code, "text": json_list} 
+
+    def delete(self, uuid, data_payload):
+        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/protocolportobjects/'+uuid
+        url=self.conn.hostname+uri 
+        response = requests.delete(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
+        json_data=json.loads(response.text)
+
+        if 'items' in json_data.keys():
+            json_list=json_data['items'] 
+        else:
+            json_list=json_data
+        return {"code": response.status_code, "text": json_list}
 
     def post(self, data_payload):
         uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/protocolportobjects?bulk=true'
@@ -314,22 +377,34 @@ class networkgroups:
         self.conn=conn
     def get(self):
         offset=0
-        limit=25
-        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networkgroups?expanded=True'
+        limit=100
+        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networkgroups?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
         url=self.conn.hostname+uri
         response = requests.get(url, headers = self.conn.headers, verify=False)
         json_data=json.loads(response.text)
-        pages=json_data['paging']['pages'] 
+        if "paging" in json_data.keys():
+            pages=json_data['paging']['pages']
+        else:
+            pages=0
         if pages != 0:
             json_list=json_data['items']
         else:
-            return {"code": response.status_code, "text": json_data}
-            
+            if "item" in json_data.keys():
+                return {"code": response.status_code, "text": json_data['items']}
+            else:
+                return {"code": response.status_code, "text": []}
+
         while pages > 0:
-            offset=offset+25
+            offset=offset+limit
             uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networkgroups?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
             url=self.conn.hostname+uri
             response = requests.get(url, headers = self.conn.headers, verify=False)
+
+            if response.status_code == 429:
+                print("We have to wait due to HTTP 429")
+                time.sleep(45)
+                response = requests.get(url, headers = self.conn.headers, verify=False)
+
             json_data=json.loads(response.text)
             if 'items' in json_data:
                 json_list=json_list+json_data['items']            
@@ -341,18 +416,39 @@ class networkgroups:
         uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networkgroups?bulk=true'
         url=self.conn.hostname+uri 
         response = requests.post(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
+
+        if response.status_code == 429:
+            print("We have to wait due to HTTP 429")
+            time.sleep(45)
+            response = requests.post(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
+
         json_data=json.loads(response.text)
+
         if 'items' in json_data.keys():
             json_list=json_data['items']
         else:
             json_list=json_data
         return {"code": response.status_code, "text": json_list}
-            
+
+    def delete(self, uuid, data_payload):
+        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networkgroups/'+uuid
+        url=self.conn.hostname+uri 
+        response = requests.delete(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
+        json_data=json.loads(response.text)
+
+        if 'items' in json_data.keys():
+            json_list=json_data['items'] 
+        else:
+            json_list=json_data
+        return {"code": response.status_code, "text": json_list}
+
     def put(self, data_payload):
         uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/networkgroups/'+data_payload["id"]
         url=self.conn.hostname+uri 
         response = requests.put(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
         json_data=json.loads(response.text)
+
+
         if 'items' in json_data.keys():
             json_list=json_data['items']
         else:
@@ -364,19 +460,25 @@ class portobjectgroups:
         self.conn=conn
     def get(self):
         offset=0
-        limit=25    
-        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/portobjectgroups?expanded=True'
+        limit=100    
+        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/portobjectgroups?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
         url=self.conn.hostname+uri
         response = requests.get(url, headers = self.conn.headers, verify=False)
         json_data=json.loads(response.text)
-        pages=json_data['paging']['pages'] 
+        if "paging" in json_data.keys():
+            pages=json_data['paging']['pages']
+        else:
+            pages=0
         if pages != 0:
             json_list=json_data['items']
         else:
-            return {"code": response.status_code, "text": json_data} 
+            if "item" in json_data.keys():
+                return {"code": response.status_code, "text": json_data['items']}
+            else:
+                return {"code": response.status_code, "text": []}
             
         while pages > 0:
-            offset=offset+25
+            offset=offset+limit
             uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/portobjectgroups?offset='+str(offset)+'&limit='+str(limit)+'&expanded=True'
             url=self.conn.hostname+uri
             response = requests.get(url, headers = self.conn.headers, verify=False)
@@ -386,6 +488,18 @@ class portobjectgroups:
             pages=pages-1
             
         return {"code": response.status_code, "text": json_list} 
+
+    def delete(self, uuid, data_payload):
+        uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/portobjectgroups/'+uuid
+        url=self.conn.hostname+uri 
+        response = requests.delete(url, headers = self.conn.headers, data = json.dumps(data_payload), verify=False)
+        json_data=json.loads(response.text)
+
+        if 'items' in json_data.keys():
+            json_list=json_data['items'] 
+        else:
+            json_list=json_data
+        return {"code": response.status_code, "text": json_list}
 
     def post(self, data_payload):
         uri='/api/fmc_config/v1/domain/'+self.conn.uuid+'/object/portobjectgroups?bulk=true'
@@ -484,12 +598,20 @@ class accessrules:
         url=self.conn.hostname+uri
         response = requests.get(url, headers = self.conn.headers, verify=False)
         json_data=json.loads(response.text)
+
         if "paging" in json_data.keys():
             pages=json_data['paging']['pages']
-            json_list=json_data['items']
+            if "items" in json_data.keys():
+                json_list=json_data['items']
+            else:
+                json_list=[]
         else:
             pages=0
-            return {"code": response.status_code, "text": json_data}
+            if "items" in json_data.keys():
+                json_list=json_data['items']
+            else:
+                json_list=[]    
+            return {"code": response.status_code, "text": json_list}
 
         while pages > 0:
             offset=offset+25
@@ -525,7 +647,10 @@ class ftdnatpolicies:
         json_data=json.loads(response.text)
         if "paging" in json_data.keys():
             pages=json_data['paging']['pages']
-            json_list=json_data['items']
+            if "items" in json_data.keys():
+                json_list=json_data['items']
+            else:
+                json_list=[]
         else:
             pages=0
             return {"code": response.status_code, "text": json_data}
@@ -614,15 +739,26 @@ class devicerecords:
         url=self.conn.hostname+uri
         response = requests.get(url, headers = self.conn.headers, verify=False)
         json_data=json.loads(response.text)
-        if "paging" in json_data:
+
+        if "paging" in json_data.keys():
             pages=json_data['paging']['pages']
+            if "items" in json_data.keys():
+                json_list=json_data['items']
+            else:
+                if response.status_code < 300:
+                    json_list=[]
+                else:
+                    json_list=json_data
         else:
             pages=0
-
-        if pages != 0:
-            json_list=json_data['items']
-        else:
-            return {"code": response.status_code, "text": json_data}
+            if "items" in json_data.keys():
+                json_list=json_data['items']
+            else:
+                if response.status_code < 300:
+                    json_list=[]
+                else:
+                    json_list=json_data 
+            return {"code": response.status_code, "text": json_list}
 
         while pages > 0:
             offset=offset+25
@@ -798,7 +934,10 @@ class policyassignments:
         json_data=json.loads(response.text)
         if "paging" in json_data.keys():
             pages=json_data['paging']['pages']
-            json_list=json_data['items']
+            if "items" in json_data.keys():
+                json_list=json_data['items']
+            else:
+                json_list=[]
         else:
             pages=0
             return {"code": response.status_code, "text": json_data}

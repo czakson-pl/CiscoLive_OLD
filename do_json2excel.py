@@ -12,13 +12,13 @@ warnings.filterwarnings('ignore', category=UserWarning, module='openpyxl')
 
 
 file_blank_excel="cloudSF_blank.xlsx"
-file_excel="cloudSF.xlsx"
+file_excel="cloudSF_PDO.xlsx"
 
 file_FTDv_json="FTDv.json"
 file_Interfaces_json="Interfaces.json"
 file_SecurityZone_json="SecurityZones.json"
 file_ACP_json="ACP.json"
-file_ACE_json="ACE_CloudAccessPolicy.json"
+file_ACE_json="ACE_PDO-DC-FTD-ACP_NEW.json"
 file_NAT_json="NAT.json"
 file_NAT_Rule_json="NAT_Entries.json"
 file_NetHostObject_json= "NetHostObject.json"
@@ -80,6 +80,7 @@ else:
 if os.path.exists(file_ACE_json):
     with open(file_ACE_json) as json_file:
         ace=json.load(json_file)
+        print_colored('PASS', 'green', "Loaded ACE Objects "+str(len(ace)),  2, 1)
 else:
     print_colored("ERROR: ", "red", "Cannot find the file:" + file_ACE_json, 2)
     exit()
@@ -101,6 +102,7 @@ else:
 if os.path.exists(file_NetHostObject_json):
     with open(file_NetHostObject_json) as json_file:
         NetHostObject=json.load(json_file)
+        print_colored('PASS', 'green', "Loaded Network/Host Objects "+str(len(NetHostObject)),  2, 2)
 else:
     print_colored("ERROR: ", "red", "Cannot find the file:" + file_NetHostObject_json, 2)
     exit()
@@ -108,6 +110,7 @@ else:
 if os.path.exists(file_ProtocolPortObject_json):
     with open(file_ProtocolPortObject_json) as json_file:
         ProtocolPortObject=json.load(json_file)
+        print_colored('PASS', 'green', "Loaded Proto/Port Objects "+str(len(ProtocolPortObject)),  2, 3)
 else:
     print_colored("ERROR: ", "red", "Cannot find the file:" + file_ProtocolPortObject_json, 2)
     exit()
@@ -115,6 +118,7 @@ else:
 if os.path.exists(file_NetworkGroups_json):
     with open(file_NetworkGroups_json) as json_file:
         NetworkGroups=json.load(json_file)
+        print_colored('PASS', 'green', "Loaded Network Groups Objects "+str(len(NetworkGroups)),  2, 4)
 else:
     print_colored("ERROR: ", "red", "Cannot find the file:" + file_NetworkGroups_json, 2)
     exit()
@@ -122,6 +126,7 @@ else:
 if os.path.exists(file_PortObjectGroups_json):
     with open(file_PortObjectGroups_json) as json_file:
         PortObjectGroups=json.load(json_file)
+        print_colored('PASS', 'green', "Loaded Proto/Port Group Objects "+str(len(PortObjectGroups)),  2, 5)
 else:
     print_colored("ERROR: ", "red", "Cannot find the file:" + file_ProtocolPortObject_json, 2)
     exit()
@@ -179,27 +184,28 @@ if isinstance(ftd, list):
 
         row=row+1       
 else:
-    ws_Device["A"+str(row)]=ftd["name"]
-    ws_Device["B"+str(row)]=ftd["hostName"]
-    ws_Device["C"+str(row)]=ftd["regKey"]
-    ws_Device["D"+str(row)]=ftd["type"]
-    if "name" in ftd["accessPolicy"].keys():
-        ws_Device["E"+str(row)]=ftd["accessPolicy"]["name"]
-    lic_str=""
-    for lic in ftd["license_caps"]:
-        lic_str=str(lic)+", "+lic_str
-    ws_Device["G"+str(row)]=lic_str
-    if "id" in ftd.keys():
-        ws_Device["H"+str(row)]=ftd["id"]    
-#Device - NAT assignement check:
-    
-    if isinstance(Policy_Assign, list):
-        for each in Policy_Assign:
-            if each["policy"]["type"]=="FTDNatPolicy":
-                ws_Device["F"+str(row)]=each["policy"]["name"]
-    else:
-        if Policy_Assign["policy"]["type"]=="FTDNatPolicy":
-            ws_Device["F"+str(row)]=Policy_Assign["policy"]["name"] 
+    if len(ftd) > 0:
+        ws_Device["A"+str(row)]=ftd["name"]
+        ws_Device["B"+str(row)]=ftd["hostName"]
+        ws_Device["C"+str(row)]=ftd["regKey"]
+        ws_Device["D"+str(row)]=ftd["type"]
+        if "name" in ftd["accessPolicy"].keys():
+            ws_Device["E"+str(row)]=ftd["accessPolicy"]["name"]
+        lic_str=""
+        for lic in ftd["license_caps"]:
+            lic_str=str(lic)+", "+lic_str
+        ws_Device["G"+str(row)]=lic_str
+        if "id" in ftd.keys():
+            ws_Device["H"+str(row)]=ftd["id"]    
+    #Device - NAT assignement check:
+        
+        if isinstance(Policy_Assign, list):
+            for each in Policy_Assign:
+                if each["policy"]["type"]=="FTDNatPolicy":
+                    ws_Device["F"+str(row)]=each["policy"]["name"]
+        else:
+            if Policy_Assign["policy"]["type"]=="FTDNatPolicy":
+                ws_Device["F"+str(row)]=Policy_Assign["policy"]["name"] 
 
 print_colored('PASS', 'green', "Successfully parsed Device sheet",  3)
 
@@ -274,21 +280,22 @@ if isinstance(SecurityZones, list):
         ws_SecurityZones["D"+str(row)].border = thin_top_border
         ws_SecurityZones["E"+str(row)].border = thin_top_border        
 else:
-    ws_SecurityZones["A"+str(row)]=SecurityZones["name"]
-    ws_SecurityZones["B"+str(row)]=SecurityZones["type"]
-    if "id" in SecurityZones.keys():
-        ws_SecurityZones["E"+str(row)]=SecurityZones["id"]
-    row_hlp1=row
-    if "interfaces" in each.keys():
-        for each_interface in each["interfaces"]:
+    if len(SecurityZones) > 0:
+        ws_SecurityZones["A"+str(row)]=SecurityZones["name"]
+        ws_SecurityZones["B"+str(row)]=SecurityZones["type"]
+        if "id" in SecurityZones.keys():
+            ws_SecurityZones["E"+str(row)]=SecurityZones["id"]
+        row_hlp1=row
+        if "interfaces" in each.keys():
+            for each_interface in each["interfaces"]:
 
-            cel=ws_SecurityZones["C"+str(row_hlp1)]
-            cel.value=each_interface["name"]   
-            dv_Interfaces.add(cel)
-            ws_SecurityZones.add_data_validation(dv_Interfaces) 
+                cel=ws_SecurityZones["C"+str(row_hlp1)]
+                cel.value=each_interface["name"]   
+                dv_Interfaces.add(cel)
+                ws_SecurityZones.add_data_validation(dv_Interfaces) 
 
-            row_hlp1=row_hlp1+1
-        row=row_hlp1
+                row_hlp1=row_hlp1+1
+            row=row_hlp1
 
 
 dv_SecurityZones = DataValidation(type="list", formula1="{0}!$A$2:$A${1}".format(quote_sheetname("SecurityZones"),ws_SecurityZones.max_row), allow_blank=False)       
@@ -303,12 +310,7 @@ if isinstance(NetHostObject, list):
     for each in NetHostObject:
         #if not isinstance(each, str):
         ws_Objects["A"+str(row)]=each["name"]
-
-        cel=ws_Objects["B"+str(row)]
-        cel.value=each["type"]   
-        dv_NetType.add(cel)
-        ws_Objects.add_data_validation(dv_NetType)  
-        
+        ws_Objects["B"+str(row)]=each["type"]
         ws_Objects["C"+str(row)]=each["value"]
         ws_Objects["D"+str(row)]=each["description"]
         ws_Objects["E"+str(row)]=each["overridable"]   
@@ -318,20 +320,16 @@ if isinstance(NetHostObject, list):
 else:
         ws_Objects["A"+str(row)]=NetHostObject["name"]
 
-        cel=ws_Objects["B"+str(row)]
-        cel.value=NetHostObject["type"]   
-        dv_NetType.add(cel)
-        ws_Objects.add_data_validation(dv_NetType)  
-        
+        ws_Objects["B"+str(row)]=each["type"]
         ws_Objects["C"+str(row)]=NetHostObject["value"]
         ws_Objects["D"+str(row)]=NetHostObject["description"]
         ws_Objects["E"+str(row)]=NetHostObject["overridable"]   
         if "id" in NetHostObject.keys(): 
             ws_Objects["F"+str(row)]=NetHostObject["id"]        
- 
-dv_NetGrpObj = DataValidation(type="list", formula1="{0}!$A$2:$A${1}".format(quote_sheetname("Objects"),ws_Objects.max_row), allow_blank=False)    
 
-print_colored('PASS', 'green', "Successfully parsed NetHostObject sheet",  6)
+#dv_NetGrpObj = DataValidation(type="list", formula1="{0}!$A$2:$A${1}".format(quote_sheetname("Objects"),ws_Objects.max_row), allow_blank=False)    
+
+print_colored('PASS', 'green', "Successfully parsed "+str(row-2)+" NetHostObject into sheet",  6)
 
 #NetworkGroup sheet
 row=2
@@ -367,10 +365,7 @@ if isinstance(NetworkGroups, list):
         if "objects" in each.keys():
             for obj in each["objects"]:    
                 ws_NetworkGroups["F"+str(row_hlp2)]="objects"
-                cel=ws_NetworkGroups["G"+str(row_hlp2)]
-                cel.value=obj["name"]    
-                dv_NetGrpObj.add(cel)
-                ws_NetworkGroups.add_data_validation(dv_NetGrpObj)            
+                ws_NetworkGroups["G"+str(row_hlp2)]=obj["name"] 
                 row_hlp2=row_hlp2+1
             
         row=max(row_hlp1, row_hlp2)
@@ -404,13 +399,10 @@ else:
     if "objects" in NetworkGroups.keys():
         for obj in NetworkGroups["objects"]:    
             ws_NetworkGroups["F"+str(row_hlp2)]="objects"
-            cel=ws_NetworkGroups["G"+str(row_hlp2)]
-            cel.value=obj["name"]    
-            dv_NetGrpObj.add(cel)
-            ws_NetworkGroups.add_data_validation(dv_NetGrpObj)            
+            ws_NetworkGroups["G"+str(row_hlp2)]=obj["name"]          
             row_hlp2=row_hlp2+1
 
-print_colored('PASS', 'green', "Successfully parsed NetworkGroup sheet",  7)
+print_colored('PASS', 'green', "Successfully parsed "+str(row-2)+" NetworkGroup Objects into sheet",  7)
 
 #ProtocolPortObject sheet
 
@@ -440,7 +432,7 @@ else:
     
 dv_ProtocolPortObject = DataValidation(type="list", formula1="{0}!$A$2:$A${1}".format(quote_sheetname("ProtocolPortObject"),ws_ProtocolPortObject.max_row), allow_blank=False)
 
-print_colored('PASS', 'green', "Successfully parsed ProtocolPortObject sheet",  8)
+print_colored('PASS', 'green', "Successfully parsed "+str(row-2)+" ProtocolPortObject into sheet",  8)
 
 #ws_PortObjectGroups sheet
 #name	type	object_name	description	overridable	id
@@ -499,7 +491,7 @@ else:
             ws_PortObjectGroups.add_data_validation(dv_ProtocolPortObject)            
             row_hlp1=row_hlp1+1
 
-print_colored('PASS', 'green', "Successfully parsed PortObjectGroup sheet",  9)
+print_colored('PASS', 'green', "Successfully parsed "+str(row-2)+" PortObjectGroup into sheet",  9)
 
 #ACP sheet
 row=2
@@ -714,10 +706,11 @@ if isinstance(nat, list):
             ws_nat["C"+str(row)]=each["id"]
         row=row+1
 else:
-    ws_nat["A"+str(row)]=nat["name"]
-    ws_nat["B"+str(row)]=nat["type"]
-    if "id" in nat.keys():    
-        ws_nat["C"+str(row)]=nat["id"]
+    if len(nat) > 0:
+        ws_nat["A"+str(row)]=nat["name"]
+        ws_nat["B"+str(row)]=nat["type"]
+        if "id" in nat.keys():    
+            ws_nat["C"+str(row)]=nat["id"]
 
 
 print_colored('PASS', 'green', "Successfully parsed NAT sheet",  13)
@@ -742,6 +735,7 @@ if isinstance(nat_rules, list):
         ws_nat_rules["N"+str(row)]=each["routeLookup"]
         if "id" in each.keys():
             ws_nat_rules["O"+str(row)]=each["id"]
+        row+=1
 
 else:
     ws_nat_rules["A"+str(row)]=nat_rules["enabled"] 
